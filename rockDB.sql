@@ -5,22 +5,22 @@ CREATE DATABASE rockDB;
 
 USE rockDB;
 
-CREATE TABLE rockTypes (
-    typeID int NOT NULL AUTO_INCREMENT,
-    typeName varchar(255) NOT NULL,
-    PRIMARY KEY (typeID)
+CREATE TABLE images (
+    imageID INT AUTO_INCREMENT PRIMARY KEY,
+    imageName VARCHAR(255),
+    imageData LONGBLOB
 );
 
 CREATE TABLE rocks (
     rockID int NOT NULL AUTO_INCREMENT,
     rockName varchar(255) NOT NULL,
-    typeID int NOT NULL,
-    mineralComposition varchar(255) NOT NULL,
-    locationFound varchar(255) NOT NULL,
-    classification varchar(255) NOT NULL,
-    rockDescription varchar(255) NOT NULL,
+    rockClass varchar(255) NOT NULL,
+    #mineralComposition varchar(255) NOT NULL,
+    RockSubclass varchar(255) NOT NULL,
+    #rockDescription varchar(255) NOT NULL,
+    imageID int,
     PRIMARY KEY (rockID),
-    FOREIGN KEY (typeID) REFERENCES rockTypes(typeID)
+    FOREIGN KEY (imageID) REFERENCES images(imageID)
 );
 
 
@@ -43,21 +43,41 @@ CREATE TABLE rockMineral (
 
 
 CREATE TABLE users (
-    userID int NOT NULL AUTO_INCREMENT,
-    userName varchar(255),
-    PRIMARY KEY (userID)
+    userName varchar(255) NOT NULL,
+    userPassword varchar(255),
+    fname varchar(255),
+    mname varchar(255),
+    lname varchar(255),
+    postID int,
+    FOREIGN KEY (postID) REFERENCES posts(postID)
+    PRIMARY KEY (userName)
 );
 
-CREATE TABLE userRock (
+CREATE TABLE posts (
+    postID int AUTO_INCREMENT,
+    posterUsername varchar(255),
+    images int,
+    rockColor varchar(255),
+    FOREIGN KEY (postID) REFERENCES posts(postID)
+    PRIMARY KEY (userName)
+);
+
+CREATE TABLE likes (
     userID INT,
-    rockID INT,
+    postID INT,
     FOREIGN KEY (userID) REFERENCES users(userID),
-    FOREIGN KEY (rockID) REFERENCES rocks(rockID),
-    PRIMARY KEY (userID, rockID)
+    FOREIGN KEY (postID) REFERENCES posts(postID),
+    PRIMARY KEY (userID, postID)
 );
 
-INSERT INTO rockTypes (`typeName`)
-VALUES ('Igneous'), ('Sedimentary'), ('Metamorphic');
+
+
+
+#INSERT INTO rockTypes (`typeName`)
+#VALUES ('Igneous'), ('Sedimentary'), ('Metamorphic');
+
+INSERT INTO images (`imageName`, `imageData`)
+VALUES ('Granite', LOAD_FILE('C:\Users\horne\Documents\GitHub\A-Database-That-Rocks\Granite.jpg'));
 
 INSERT INTO minerals (`mineralName`, `mineralHardness`)
 VALUES 
@@ -67,11 +87,15 @@ VALUES
 ('Calcite', 3),
 ('Hornblende', 5);
 
-INSERT INTO rocks (`rockName`, `typeID`, `mineralComposition`, `locationFound`, `classification`, `rockDescription`)
-VALUES ('Granite', 1, 'Quartz, Feldspar, Mica', 'Colorado, USA', 'Intrusive igneous rock', 'A rock that is equal parts Gran and ite');
+INSERT INTO rocks (`rockName`, `class`, , `subClass`)
+VALUES ('Granite','Quartz', 'Intrusive igneous rock');
 
-INSERT INTO rocks (`rockName`, `typeID`, `mineralComposition`, `locationFound`, `classification`, `rockDescription`)
-VALUES ('Dwayne Johnson', 3, 'Skill, Power, Glare', 'In your dreams', 'Smouldering', 'He has a son named, "The Pebble"');
+INSERT INTO rocks (`rockName`, `typeID`, `mineralComposition`, `locationFound`, `classification`, `rockDescription`, `imageID`)
+VALUES ('Dwayne Johnson', 'Skill', 'Power', );
+
+INSERT INTO users (userName) VALUES ('t');
+
+INSERT INTO users (userName) VALUES ('j');
 
 INSERT INTO userRock (userID, rockID)
 VALUES 
@@ -81,8 +105,8 @@ VALUES
 
 #SHOW TABLES;
 
-#DROP DATABASE rockDB;
+DROP DATABASE rockDB;
 
-DROP TABLE userRock
+DROP TABLE images
 
-DROP TABLE users
+DROP TABLE rocks

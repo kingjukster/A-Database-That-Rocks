@@ -1,1 +1,5 @@
-test
+Questions?
+
+Are the DID_LIKE, LIKES, and WAS_LIKED tables all the same?
+
+Did we stop using types in favor of classes?
