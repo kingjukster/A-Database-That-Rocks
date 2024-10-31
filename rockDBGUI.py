@@ -2,6 +2,8 @@ import mysql.connector
 from tkinter import *
 from tkinter import ttk
 from tkinter import messagebox
+from PIL import Image, ImageTk
+import io
 def connectDB():
     return mysql.connector.connect(
                 host="localhost",
@@ -31,7 +33,7 @@ def populateUserRockTable(userID=None):
         cursor = conn.cursor()
         if userID:
             cursor.execute("""
-                SELECT r.rockID, r.rockName, r.typeID, r.mineralComposition, r.locationFound, r.classification, r.rockDescription
+                SELECT r.rockID, r.rockName, r.typeID, r.mineralComposition, r.locationFound, r.classification, r.rockDescription, r.imageID
                 FROM rocks r
                 JOIN userRock ur ON r.rockID = ur.rockID
                 WHERE ur.userID = %s
@@ -44,9 +46,18 @@ def populateUserRockTable(userID=None):
 #            cursor.execute(query)
         
         rows = cursor.fetchall()
-        
+
         for row in rows:
-            userRockTable.insert("", "end", values=row)
+            print(rows)
+            rockID, rockName, typeID, mineralComposition, locationFound, classification, rockDescription, imageID = row
+        imageData = retrieveImage(imageID)
+        photo = None
+        if imageData:
+            image = Image.open(io.BytesIO(imageData))
+            image.thumbnail((100, 100))  # Resize image
+            photo = ImageTk.PhotoImage(image)
+
+        userRockTable.insert("", "end", values=row, image=photo)
             
     except mysql.connector.Error as err:
         print(f"Error: {err}")
@@ -61,7 +72,7 @@ def toggleFullscreen(event=None):
 
 def exitFullscreen(event=None):
     root.attributes("-fullscreen", False)
-    root.bind("<F11>", toggleFullscreen)
+    root.bind("<Escape>", toggleFullscreen)
 
 def quitApp():
     root.quit()
@@ -203,13 +214,13 @@ def addRock():
     Button(addRockWindow, text="Submit", command=submitRock).grid(row=6, columnspan=2, pady=10)
 
 def refreshRockTableData():
-    for i in rockTable.get_children():
-        rockTable.delete(i)
+    for row in rockTable.get_children():
+        rockTable.delete(row)
     populateRockTable()
 
 def refreshUserRockTableData(userID=None):
-    for i in userRockTable.get_children():
-        userRockTable.delete(i)
+    for row in userRockTable.get_children():
+        userRockTable.delete(row)
     populateUserRockTable(userID)
 
 #reveals rock table
@@ -231,11 +242,46 @@ def showUserRockFrame(userID):
     quitUserRockFrameButton.pack(side=RIGHT, padx=10)
     refreshUserRockTableData(userID)
 
+def retrieveImage(imageID):
+    try:
+        conn = connectDB()
+        cursor = conn.cursor()
+        
+        cursor.execute("SELECT imageData FROM images WHERE imageID = %s", (imageID,))
+        image = cursor.fetchone()
+        
+        if image:
+            return image[0]
+        else:
+            print("Image not found.")
+            return None
+
+    except mysql.connector.Error as err:
+        print(f"Error: {err}")
+        return None
+    finally:
+        cursor.close()
+        conn.close()
+
+def displayImage(imageID, frame, col, row):
+    imageData = retrieveImage(imageID)
+    
+    if imageData:
+        image = Image.open(io.BytesIO(imageData))
+        image.thumbnail((100, 100))
+        photo = ImageTK.PhotoImage(image)
+        
+        label = Label(frame, image=photo)
+        label.image = photo
+        label.pack(row=row, column=1, padx=10, pady=10)
+    else:
+        print("No image to display.")
+
 root = Tk()
 root.title("A Database that Rocks")
 
 root.attributes("-fullscreen", True)
-root.bind("<F11>", toggleFullscreen)
+root.bind("<Escape>", toggleFullscreen)
 root.bind("<Escape>", exitFullscreen)
 
 screenWidth = root.winfo_screenwidth()
@@ -288,7 +334,8 @@ populateRockTable()
 #this frame displays the userRock table
 userRockTableFrame = Frame(root)
 #userRockTableFrame.pack(fill=BOTH, expand=TRUE) 
-userRockTable = ttk.Treeview(userRockTableFrame, columns=("ID", "Name", "Type ID", "Mineral Composition", "Location Found", "Classification", "Rock Description"), show='headings')
+userRockTable = ttk.Treeview(userRockTableFrame, columns=("Image", "ID", "Name", "Type ID", "Mineral Composition", "Location Found", "Classification", "Rock Description"), show='headings')
+userRockTable.heading("Image", text="Image")
 userRockTable.heading("ID", text="Rock ID")
 userRockTable.heading("Name", text="Name")
 userRockTable.heading("Type ID", text="Type ID")
@@ -297,6 +344,7 @@ userRockTable.heading("Location Found", text="Location Found")
 userRockTable.heading("Classification", text="Classification")
 userRockTable.heading("Rock Description", text="Rock Description")
 
+userRockTable.column("Image", width=100, anchor="center")
 userRockTable.column("ID", width=100, anchor="center")
 userRockTable.column("Name", width=200, anchor="center")
 userRockTable.column("Type ID", width=100, anchor="center")
