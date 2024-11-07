@@ -202,6 +202,66 @@ def addRock():
 
     Button(addRockWindow, text="Submit", command=submitRock).grid(row=6, columnspan=2, pady=10)
 
+def addPost():
+    def submitPost():
+        try:
+            conn = connectDB()
+            cursor = conn.cursor()
+            
+            rockName = rockNameEntry.get()
+            typeID = typeIDEntry.get()
+            mineralComposition = mineralCompositionEntry.get()
+            locationFound = locationFoundEntry.get()
+            classification = classificationEntry.get()
+            rockDescription = rockDescriptionEntry.get()
+            cursor.execute("""
+                INSERT INTO rocks (rockName, typeID, mineralComposition, locationFound, classification, rockDescription)
+                VALUES (%s, %s, %s, %s, %s, %s)
+            """, (rockName, typeID, mineralComposition, locationFound, classification, rockDescription))
+            
+            conn.commit()
+            messagebox.showinfo("Success", "Rock added successfully!")
+            
+            addPostWindow.destroy()
+            
+            refreshRockTableData()
+        
+        except mysql.connector.Error as err:
+            print(f"Error: {err}")
+            messagebox.showerror("Error", "Failed to add rock.")
+        finally:
+            cursor.close()
+            conn.close()
+    
+    addPostWindow = Toplevel(root)
+    addPostWindow.title("Add New Post")
+
+    Label(addPostWindow, text="Rock Name:").grid(row=0, column=0, padx=10, pady=5)
+    rockNameEntry = Entry(addPostWindow)
+    rockNameEntry.grid(row=0, column=1, padx=10, pady=5)
+
+    Label(addPostWindow, text="Type ID:").grid(row=1, column=0, padx=10, pady=5)
+    typeIDEntry = Entry(addPostWindow)
+    typeIDEntry.grid(row=1, column=1, padx=10, pady=5)
+
+    Label(addPostWindow, text="Mineral Composition:").grid(row=2, column=0, padx=10, pady=5)
+    mineralCompositionEntry = Entry(addPostWindow)
+    mineralCompositionEntry.grid(row=2, column=1, padx=10, pady=5)
+
+    Label(addPostWindow, text="Location Found:").grid(row=3, column=0, padx=10, pady=5)
+    locationFoundEntry = Entry(addPostWindow)
+    locationFoundEntry.grid(row=3, column=1, padx=10, pady=5)
+
+    Label(addPostWindow, text="Classification:").grid(row=4, column=0, padx=10, pady=5)
+    classificationEntry = Entry(addPostWindow)
+    classificationEntry.grid(row=4, column=1, padx=10, pady=5)
+
+    Label(addPostWindow, text="Rock Description:").grid(row=5, column=0, padx=10, pady=5)
+    rockDescriptionEntry = Entry(addPostWindow)
+    rockDescriptionEntry.grid(row=5, column=1, padx=10, pady=5)
+
+    Button(addPostWindow, text="Submit", command=submitPost).grid(row=6, columnspan=2, pady=10)
+
 def refreshRockTableData():
     for i in rockTable.get_children():
         rockTable.delete(i)
@@ -218,6 +278,7 @@ def showRockFrame():
     rockTableFrame.pack(fill=BOTH, expand=True)
     rockTableRefreshButton.pack(side=LEFT, padx=10)
     addRockButton.pack(side=LEFT, padx=10)
+    addPostButton.pack(side = LEFT, padx = 10)
     switchToUserRockTable.pack(side=LEFT, padx=10)
     quitRockFrameButton.pack(side=RIGHT, padx=10)
     refreshRockTableData()
@@ -310,6 +371,7 @@ populateUserRockTable()
 
 rockTableRefreshButton = Button(rockTableFrame, text="Refresh Data", command=refreshRockTableData)
 addRockButton = Button(rockTableFrame, text="Add Rock", command=addRock)
+addPostButton = Button(rockTableFrame, text="Add Post", command=addPost)
 switchToUserRockTable = Button(rockTableFrame, text="User Rocks", command=lambda: showUserRockFrame(currentUserID))
 userRockTableRefreshButton = Button(userRockTableFrame, text="Refresh Data", command=lambda: refreshUserRockTableData(currentUserID))
 addUserRockButton = Button(userRockTableFrame, text="Add Rock", command=addRock)

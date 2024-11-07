@@ -1,4 +1,4 @@
--- Active: 1725994447906@127.0.0.1@3306@rockdb
+-- Active: 1730235245814@127.0.0.1@3306@rockdb
 
 
 CREATE DATABASE rockDB;
@@ -40,6 +40,14 @@ CREATE TABLE rockMineral (
     PRIMARY KEY (rockID, mineralID)
 );
 
+CREATE TABLE posts(
+    postID int NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    postDescription TEXT NOT NUll,
+    postUsername VARCHAR(255) FOREIGN KEY postUsername REFERENCES users(userID),
+    images VARCHAR(255),
+    rockColor ENUM ('Red','Black','White','Green','Yellow','Orange','Blue','Purple'),
+    rockID int FOREIGN KEY REFERENCES rocks(rockID)
+);
 
 
 CREATE TABLE users (
