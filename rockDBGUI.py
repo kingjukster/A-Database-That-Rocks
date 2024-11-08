@@ -127,7 +127,6 @@ def createUser():
 #loginuser updated 11/7
 def loginUser():
     def checkUser():
-        
         userName = selected_user.get()
         password = passwordEntry.get()
         if not userName or not password:
@@ -135,7 +134,7 @@ def loginUser():
             return
         elif userName.split(" ")[1] == "" and userName.split(" ")[2] == "":
             #basic admin check
-            if userName.split(" ")[0] == "ADMIN" and password == "password":
+            if userName.split(" ")[0] == "ADMIN" and password == "0":
                 titleFrame.pack_forget()
                 messagebox.showinfo("Success", "ADMIN login successful!")
                 loginWindow.destroy()
@@ -175,7 +174,7 @@ def loginUser():
                 user = cursor.fetchone()
             #print(user)
             if user:
-                global currentUserID
+                global currentUserID 
                 currentUserID = user[0]
                 titleFrame.pack_forget()
                 messagebox.showinfo("Success", "User login successful!")
@@ -212,6 +211,111 @@ def loginUser():
     ##
     Button(loginWindow, text="Login", command=checkUser).grid(row=6, columnspan=2, pady=10)
         
+#created editUser 11/7
+def editUser():
+    def removeUser():
+        userName = selected_user.get()
+        firstName, middleName, lastName = userName.split(" ")
+        try:
+            conn = connectDB()
+            cursor = conn.cursor()        
+            cursor.execute("DELETE FROM users WHERE fName = %s AND mName = %s AND lName = %s", (firstName, middleName, lastName))
+            conn.commit()
+            messagebox.showinfo("Success", "User removed successfully!")
+        except mysql.connector.Error as err:
+            print(f"Error: {err}")
+            messagebox.showerror("Error", "Failed to Remove.")
+        finally:
+            cursor.close()
+            conn.close()
+    
+    def makeChanges():
+        def saveEdits(userID):
+            try:
+                conn = connectDB()
+                cursor = conn.cursor()
+                firstName = firstNameEntry.get()
+                middleName = middleNameEntry.get() or ""
+                lastName = lastNameEntry.get() or ""
+                password = passwordEntry.get()
+                cursor.execute("""
+                UPDATE users SET fName = %s, mName = %s, lName = %s, userPassword = %s
+                WHERE userID = %s
+            """, (firstName, middleName, lastName, password, userID))
+                conn.commit()
+                messagebox.showinfo("Success", "User edited successfully!")
+                editUserWindow.destroy()
+                
+            except mysql.connector.Error as err:
+                print(f"Error: {err}")
+                messagebox.showerror("Error", "Failed to edit user.")
+            finally:
+                cursor.close()
+                conn.close()
+        
+        try:
+            userName = selected_user.get()
+            firstName, middleName, lastName = userName.split(" ")
+            conn = connectDB()
+            cursor = conn.cursor()
+            cursor.execute("""
+                        SELECT * FROM users
+                        WHERE 
+                        fName=%s 
+                        AND mName=%s
+                        AND lName=%s
+                        """, (firstName, middleName, lastName))
+            user = cursor.fetchone()
+        except mysql.connector.Error as err:
+            print(f"Error: {err}")
+            messagebox.showerror("Error", "Failed to edit user.")
+        finally:
+            cursor.close()
+            conn.close()
+        editUserWindow = Toplevel(root)
+        editUserWindow.title("Edit User")
+        
+        Label(editUserWindow, text="First Name:").grid(row=0, column=0, padx=10, pady=5)
+        firstNameEntry = Entry(editUserWindow)
+        firstNameEntry.insert(0, user[2])
+        firstNameEntry.grid(row=0, column=1, padx=10, pady=5)
+        ##
+        Label(editUserWindow, text="Middle Name:").grid(row=1, column=0, padx=10, pady=5)
+        middleNameEntry = Entry(editUserWindow)
+        middleNameEntry.insert(0, user[3])
+        middleNameEntry.grid(row=1, column=1, padx=10, pady=5)
+        ##
+        Label(editUserWindow, text="Last Name:").grid(row=2, column=0, padx=10, pady=5)
+        lastNameEntry = Entry(editUserWindow)
+        lastNameEntry.insert(0, user[4])
+        lastNameEntry.grid(row=2, column=1, padx=10, pady=5)
+        ##
+        Label(editUserWindow, text="Password:").grid(row=3, column=0, padx=10, pady=5)
+        passwordEntry = Entry(editUserWindow)
+        passwordEntry.insert(0, user[1])
+        passwordEntry.grid(row=3, column=1, padx=10, pady=5)
+        ##
+        Button(editUserWindow, text="Save", command=lambda: saveEdits(user[0])).grid(row=6, columnspan=2, pady=10)
+
+    global currentUserID
+    if currentUserID == -1:
+        deleteWindow = Toplevel(root)
+        deleteWindow.title("Delete Account")
+        conn = connectDB()
+        cursor = conn.cursor()        
+        cursor.execute("""SELECT CONCAT_WS(' ', fName, mName, lName) as fullName FROM users""" )
+        usernames = [row[0] for row in cursor.fetchall()]
+        conn.close()
+        Label(deleteWindow, text="User Name:").grid(row=0, column=0, padx=10, pady=5)
+        selected_user = StringVar()
+        selected_user.set(usernames[0])
+        userNameDropdown = OptionMenu(deleteWindow, selected_user, *usernames)
+        userNameDropdown.grid(row=0, column=1, padx=10, pady=5)
+        Button(deleteWindow, text="Delete", command=removeUser).grid(row=6, columnspan=2, pady=10)
+        Button(deleteWindow, text="Edit", command=makeChanges).grid(row=7, columnspan=2, pady=10)
+    else:
+        messagebox.showerror("Error", "ADMIN ONLY!")
+            
 
 def addRock():
     def submitRock():
@@ -361,6 +465,7 @@ def showUserRockFrame(userID):
     addUserRockButton.pack(side=LEFT, padx=10)
     switchToRockTable.pack(side=LEFT, padx=10)
     quitUserRockFrameButton.pack(side=RIGHT, padx=10)
+    deleteUserUserRockFrameButton.pack(side=RIGHT, padx=10)
     refreshUserRockTableData(userID)
 
 def retrieveImage(imageID):
@@ -397,6 +502,10 @@ def displayImage(imageID, frame, col, row):
         label.pack(row=row, column=1, padx=10, pady=10)
     else:
         print("No image to display.")
+
+
+
+currentUserID = -1
 
 root = Tk()
 root.title("A Database that Rocks")
@@ -485,6 +594,7 @@ userRockTableRefreshButton = Button(userRockTableFrame, text="Refresh Data", com
 addUserRockButton = Button(userRockTableFrame, text="Add Rock", command=addRock)
 quitRockFrameButton = Button(rockTableFrame, text="Quit", command=quitApp)
 quitUserRockFrameButton = Button(userRockTableFrame, text="Quit", command=quitApp)
+deleteUserUserRockFrameButton = Button(userRockTableFrame, text="Edit Users", command=editUser)
 switchToRockTable = Button(userRockTableFrame, text="View All Rocks", command=showRockFrame)
 
 

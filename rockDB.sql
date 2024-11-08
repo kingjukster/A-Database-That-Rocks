@@ -93,9 +93,8 @@ VALUES ('Granite','Quartz', 'Intrusive igneous rock');
 INSERT INTO rocks (`rockName`, `typeID`, `mineralComposition`, `locationFound`, `classification`, `rockDescription`, `imageID`)
 VALUES ('Dwayne Johnson', 'Skill', 'Power', );
 
-INSERT INTO users (userName) VALUES ('t');
-
-INSERT INTO users (userName) VALUES ('j');
+#INSERT INTO users (userPassword, fName) VALUES ('p', 'ADMIN');
+INSERT INTO users (userPassword, fName, mName, lName) VALUES ('p', 'ADMIN', NULL, NULL), ('0', 'Terrell', 'Michael', 'Heredia');
 
 INSERT INTO userRock (userID, rockID)
 VALUES 
