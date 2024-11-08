@@ -16,7 +16,7 @@ CREATE TABLE rocks (
     rockName varchar(255) NOT NULL,
     rockClass varchar(255) NOT NULL,
     #mineralComposition varchar(255) NOT NULL,
-    RockSubclass varchar(255) NOT NULL,
+    rockSubclass varchar(255),
     #rockDescription varchar(255) NOT NULL,
     imageID int,
     PRIMARY KEY (rockID),
@@ -54,9 +54,9 @@ CREATE TABLE posts(
 CREATE TABLE users (
     userID int AUTO_INCREMENT,
     userPassword varchar(255),
-    fName varchar(255),
+    fName varchar(255) NOT NULL,
     mName varchar(255),
-    lName varchar(255),
+    lName varchar(255) NOT NULL,
     #postID int,
     #FOREIGN KEY (postID) REFERENCES posts(postID)
     PRIMARY KEY (userID)
@@ -87,20 +87,7 @@ VALUES
 ('Calcite', 3),
 ('Hornblende', 5);
 
-INSERT INTO rocks (`rockName`, `class`, , `subClass`)
-VALUES ('Granite','Quartz', 'Intrusive igneous rock');
-
-INSERT INTO rocks (`rockName`, `typeID`, `mineralComposition`, `locationFound`, `classification`, `rockDescription`, `imageID`)
-VALUES ('Dwayne Johnson', 'Skill', 'Power', );
-
-#INSERT INTO users (userPassword, fName) VALUES ('p', 'ADMIN');
 INSERT INTO users (userPassword, fName, mName, lName) VALUES ('p', 'ADMIN', NULL, NULL), ('0', 'Terrell', 'Michael', 'Heredia');
-
-INSERT INTO userRock (userID, rockID)
-VALUES 
-(1, 1),
-(2, 1),
-(1, 2);
 
 #SHOW TABLES;
 

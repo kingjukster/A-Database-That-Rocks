@@ -4,6 +4,8 @@ from tkinter import ttk
 from tkinter import messagebox
 from PIL import Image, ImageTk
 import io
+import csv
+
 def connectDB():
     return mysql.connector.connect(
                 host="localhost",
@@ -11,6 +13,31 @@ def connectDB():
                 password="Superbowl2023",
                 database="rockDB"
             )
+
+#fill db with rocks (name, class, subclass) 11/7
+def fillDB():
+    csvPath = "rock.csv"
+    with open(csvPath, encoding="utf-8") as csvfile:
+        csv_reader = csv.reader(csvfile)
+        next(csv_reader)
+        for row in csv_reader:
+            rockName = row[0]
+            rockClass = row[1]
+            rockSubClass = row[2]
+            try:
+                conn = connectDB()
+                cursor = conn.cursor()
+                cursor.execute("""
+                    INSERT INTO rocks (rockName, rockClass, rockSubClass)
+                    VALUES (%s, %s, %s)
+                    """, (rockName, rockClass, rockSubClass))
+                conn.commit()
+            except mysql.connector.Error as err:
+                print(f"Error: {err}")
+            finally:
+                cursor.close()
+                conn.close()
+
 def populateRockTable():
     try:
         conn = connectDB()
@@ -84,10 +111,9 @@ def createUser():
             conn = connectDB()
             cursor = conn.cursor()
             firstName = firstNameEntry.get()
-            middleName = middleNameEntry.get() or ""
-            lastName = lastNameEntry.get() or ""
+            middleName = middleNameEntry.get() or None
+            lastName = lastNameEntry.get()
             password = passwordEntry.get()
-            print(firstName, middleName, lastName)
             cursor.execute("""
             INSERT INTO users (fName, mName, lName, userPassword)
             VALUES (%s, %s, %s, %s)
@@ -132,7 +158,7 @@ def loginUser():
         if not userName or not password:
             messagebox.showerror("Error", "Username or password cannot be empty.")
             return
-        elif userName.split(" ")[1] == "" and userName.split(" ")[2] == "":
+        elif len(userName.split(" ")) == 1:
             #basic admin check
             if userName.split(" ")[0] == "ADMIN" and password == "0":
                 titleFrame.pack_forget()
@@ -144,7 +170,7 @@ def loginUser():
                 messagebox.showerror("Error", "ADMIN password incorrect!")
                 return
             #end of admin check
-        elif userName.split(" ")[1] == "":
+        elif len(userName.split(" ")) == 2:
             fName, lName = userName.split(" ")
         else:
             fName, mName, lName = userName.split(" ")
@@ -153,7 +179,7 @@ def loginUser():
         try:
             conn = connectDB()
             cursor = conn.cursor()
-            if mName != "":
+            if len(userName.split(" ")) == 3:
                 cursor.execute("""
                             SELECT * FROM users
                             WHERE 
@@ -215,11 +241,17 @@ def loginUser():
 def editUser():
     def removeUser():
         userName = selected_user.get()
-        firstName, middleName, lastName = userName.split(" ")
+        if len(userName.split(" ")) == 3:
+            firstName, middleName, lastName = userName.split(" ")
+        else:
+            firstName, lastName = userName.split(" ")
         try:
             conn = connectDB()
-            cursor = conn.cursor()        
-            cursor.execute("DELETE FROM users WHERE fName = %s AND mName = %s AND lName = %s", (firstName, middleName, lastName))
+            cursor = conn.cursor()
+            if len(userName.split(" ")) == 3:
+                cursor.execute("DELETE FROM users WHERE fName = %s AND mName = %s AND lName = %s", (firstName, middleName, lastName))
+            else:
+                cursor.execute("DELETE FROM users WHERE fName = %s AND lName = %s", (firstName, lastName))
             conn.commit()
             messagebox.showinfo("Success", "User removed successfully!")
         except mysql.connector.Error as err:
@@ -506,7 +538,7 @@ def displayImage(imageID, frame, col, row):
 
 
 currentUserID = -1
-
+#fillDB() #this fills rock table with rocks 
 root = Tk()
 root.title("A Database that Rocks")
 
