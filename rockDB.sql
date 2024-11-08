@@ -43,31 +43,23 @@ CREATE TABLE rockMineral (
 CREATE TABLE posts(
     postID int NOT NULL AUTO_INCREMENT PRIMARY KEY,
     postDescription TEXT NOT NUll,
-    postUsername VARCHAR(255) FOREIGN KEY postUsername REFERENCES users(userID),
+    #postUsername VARCHAR(255) FOREIGN KEY postUsername REFERENCES users(userID),
     images VARCHAR(255),
     rockColor ENUM ('Red','Black','White','Green','Yellow','Orange','Blue','Purple'),
-    rockID int FOREIGN KEY REFERENCES rocks(rockID)
+    rockID int,
+    FOREIGN KEY (rockID) REFERENCES rocks(rockID)
 );
 
 
 CREATE TABLE users (
-    userName varchar(255) NOT NULL,
+    userID int AUTO_INCREMENT,
     userPassword varchar(255),
-    fname varchar(255),
-    mname varchar(255),
-    lname varchar(255),
-    postID int,
-    FOREIGN KEY (postID) REFERENCES posts(postID)
-    PRIMARY KEY (userName)
-);
-
-CREATE TABLE posts (
-    postID int AUTO_INCREMENT,
-    posterUsername varchar(255),
-    images int,
-    rockColor varchar(255),
-    FOREIGN KEY (postID) REFERENCES posts(postID)
-    PRIMARY KEY (userName)
+    fName varchar(255),
+    mName varchar(255),
+    lName varchar(255),
+    #postID int,
+    #FOREIGN KEY (postID) REFERENCES posts(postID)
+    PRIMARY KEY (userID)
 );
 
 CREATE TABLE likes (

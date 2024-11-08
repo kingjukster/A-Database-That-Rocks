@@ -77,18 +77,23 @@ def exitFullscreen(event=None):
 def quitApp():
     root.quit()
 
+#createUser updated 11/7
 def createUser():
     def submitUser():
         try:
             conn = connectDB()
             cursor = conn.cursor()
-            
-            userName = userNameEntry.get()
-            cursor.execute("INSERT INTO users (userName) VALUES (%s)", (userName,))
-            
+            firstName = firstNameEntry.get()
+            middleName = middleNameEntry.get() or ""
+            lastName = lastNameEntry.get() or ""
+            password = passwordEntry.get()
+            print(firstName, middleName, lastName)
+            cursor.execute("""
+            INSERT INTO users (fName, mName, lName, userPassword)
+            VALUES (%s, %s, %s, %s)
+        """, (firstName, middleName, lastName, password))
             conn.commit()
             messagebox.showinfo("Success", "User added successfully!")
-            
             addUserWindow.destroy()
             
         except mysql.connector.Error as err:
@@ -101,30 +106,73 @@ def createUser():
     addUserWindow = Toplevel(root)
     addUserWindow.title("Create User")
     
-    Label(addUserWindow, text="User Name:").grid(row=0, column=0, padx=10, pady=5)
-    userNameEntry = Entry(addUserWindow)
-    userNameEntry.grid(row=0, column=1, padx=10, pady=5)
-    
+    Label(addUserWindow, text="First Name:").grid(row=0, column=0, padx=10, pady=5)
+    firstNameEntry = Entry(addUserWindow)
+    firstNameEntry.grid(row=0, column=1, padx=10, pady=5)
+    ##
+    Label(addUserWindow, text="Middle Name:").grid(row=1, column=0, padx=10, pady=5)
+    middleNameEntry = Entry(addUserWindow)
+    middleNameEntry.grid(row=1, column=1, padx=10, pady=5)
+    ##
+    Label(addUserWindow, text="Last Name:").grid(row=2, column=0, padx=10, pady=5)
+    lastNameEntry = Entry(addUserWindow)
+    lastNameEntry.grid(row=2, column=1, padx=10, pady=5)
+    ##
+    Label(addUserWindow, text="Password:").grid(row=3, column=0, padx=10, pady=5)
+    passwordEntry = Entry(addUserWindow)
+    passwordEntry.grid(row=3, column=1, padx=10, pady=5)
+    ##
     Button(addUserWindow, text="Create", command=submitUser).grid(row=6, columnspan=2, pady=10)
         
-
+#loginuser updated 11/7
 def loginUser():
     def checkUser():
-        userName = userNameEntry.get()
         
-        if not userName:
+        userName = selected_user.get()
+        password = passwordEntry.get()
+        if not userName or not password:
             messagebox.showerror("Error", "Username or password cannot be empty.")
             return
+        elif userName.split(" ")[1] == "" and userName.split(" ")[2] == "":
+            #basic admin check
+            if userName.split(" ")[0] == "ADMIN" and password == "password":
+                titleFrame.pack_forget()
+                messagebox.showinfo("Success", "ADMIN login successful!")
+                loginWindow.destroy()
+                showUserRockFrame(1)
+                return
+            else:
+                messagebox.showerror("Error", "ADMIN password incorrect!")
+                return
+            #end of admin check
+        elif userName.split(" ")[1] == "":
+            fName, lName = userName.split(" ")
+        else:
+            fName, mName, lName = userName.split(" ")
+        
         
         try:
             conn = connectDB()
             cursor = conn.cursor()
-            
-            cursor.execute("""
-                           SELECT * FROM users
-                           WHERE userName=%s
-                           """, (userName,))
-            user = cursor.fetchone()
+            if mName != "":
+                cursor.execute("""
+                            SELECT * FROM users
+                            WHERE 
+                            fName=%s 
+                            AND mName=%s
+                            AND lName=%s
+                            AND userPassword=%s
+                            """, (fName, mName, lName, password))
+                user = cursor.fetchone()
+            else:
+                cursor.execute("""
+                            SELECT * FROM users
+                            WHERE 
+                            fName=%s 
+                            AND lName=%s
+                            AND userPassword=%s
+                            """, (fName, lName, password))
+                user = cursor.fetchone()
             #print(user)
             if user:
                 global currentUserID
@@ -146,10 +194,22 @@ def loginUser():
     loginWindow = Toplevel(root)
     loginWindow.title("Login")
     
-    Label(loginWindow, text="User Name:").grid(row=0, column=0, padx=10, pady=5)
-    userNameEntry = Entry(loginWindow)
-    userNameEntry.grid(row=0, column=1, padx=10, pady=5)
+    conn = connectDB()
+    cursor = conn.cursor()        
+    cursor.execute("""SELECT CONCAT_WS(' ', fName, mName, lName) as fullName FROM users""" )
+    usernames = [row[0] for row in cursor.fetchall()]
+    conn.close()
     
+    Label(loginWindow, text="User Name:").grid(row=0, column=0, padx=10, pady=5)
+    selected_user = StringVar()
+    selected_user.set(usernames[0])
+    userNameDropdown = OptionMenu(loginWindow, selected_user, *usernames)
+    userNameDropdown.grid(row=0, column=1, padx=10, pady=5)
+    ##
+    Label(loginWindow, text="Password:").grid(row=1, column=0, padx=10, pady=5)
+    passwordEntry = Entry(loginWindow)
+    passwordEntry.grid(row=1, column=1, padx=10, pady=5)
+    ##
     Button(loginWindow, text="Login", command=checkUser).grid(row=6, columnspan=2, pady=10)
         
 
