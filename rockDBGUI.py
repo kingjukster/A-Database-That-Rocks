@@ -574,11 +574,11 @@ def displayImage(currentUserID):
     result = cursor.fetchone()
     numPosts = result[0]
     for i in range(numPosts):
-        row = i // columnsPerRow
+        row = (i // columnsPerRow) + 1
         col = i % columnsPerRow
-        
         cursor.execute("SELECT * FROM posts WHERE postID=%s", (i+1,))
         posts = cursor.fetchall()
+        print(posts)
         post = posts[0]
         cursor.execute("SELECT rockName FROM rocks WHERE rockID=%s", (post[5],))
         rocks = cursor.fetchall()
@@ -600,13 +600,23 @@ def displayImage(currentUserID):
                 print(f"Error loading image for post {i + 1}: {e}")
         viewButton = Button(postFrame, text="View", command=lambda p=post: detailedView(p))
         viewButton.pack()
-        
+    
+    root.grid_rowconfigure(0, weight=0, minsize=50)
     for col in range(columnsPerRow):
         root.grid_columnconfigure(col, weight=1)
-    
+    toolBarFrame = Frame(root, height=50)
+    toolBarFrame.grid(row=0, column=0, sticky="n")
+    quitButton = Button(toolBarFrame, text="Quit", command=quitApp)
+    quitButton.grid(row=0, column=0, padx=10, pady=10, sticky="ne")
+    addPostButton = Button(toolBarFrame, text="Add Post", command=addPost)
+    addPostButton.grid(row=0, column=0, padx=100, pady=10, sticky="ne")
+    options = ["All", "Color"]
+    selectedOption = StringVar()
+    selectedOption.set(options[0])
+    filterMenu = OptionMenu(toolBarFrame, selectedOption, *options)
+    filterMenu.grid(row=0, column=0, padx=200, pady=10, sticky="ne")
     cursor.close()
     conn.close()
-
 
 
 currentUserID = -1
@@ -693,12 +703,16 @@ populateUserRockTable()
 
 rockTableRefreshButton = Button(rockTableFrame, text="Refresh Data", command=refreshRockTableData)
 addRockButton = Button(rockTableFrame, text="Add Rock", command=addRock)
-addPostButton = Button(rockTableFrame, text="Add Post", command=addPost)
+
+#addPostButton = Button(root, text="Add Post", command=addPost)
+
 switchToUserRockTable = Button(rockTableFrame, text="User Rocks", command=lambda: showUserRockFrame(currentUserID))
+
 userRockTableRefreshButton = Button(userRockTableFrame, text="Refresh Data", command=lambda: refreshUserRockTableData(currentUserID))
 addUserRockButton = Button(userRockTableFrame, text="Add Rock", command=addRock)
 quitRockFrameButton = Button(rockTableFrame, text="Quit", command=quitApp)
 quitUserRockFrameButton = Button(userRockTableFrame, text="Quit", command=quitApp)
+
 deleteUserUserRockFrameButton = Button(userRockTableFrame, text="Edit Users", command=editUser)
 switchToRockTable = Button(userRockTableFrame, text="View All Rocks", command=showRockFrame)
 

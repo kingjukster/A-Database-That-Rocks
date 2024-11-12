@@ -88,7 +88,7 @@ VALUES
 ('Hornblende', 5);
 
 INSERT INTO posts (`postDescription`, `postUserID`, `images`, `rockColor`, `rockID`)
-VALUES ('This is rock', 2, 'C:/Users/horne/Pictures/Saved Pictures/istockphoto-1141277826-612x612.jpg', 'Red', 1)
+VALUES ('This is rock', 2, 'C:/Users/Terrell/database/A-Database-That-Rocks/Granite.jpg', 'Red', 1)
 
 INSERT INTO users (userPassword, fName, mName, lName) VALUES ('p', 'ADMIN', NULL, 'l'), ('0', 'Terrell', 'Michael', 'Heredia');
 
