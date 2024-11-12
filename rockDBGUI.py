@@ -522,6 +522,24 @@ def showUserRockFrame(userID):
     quitUserRockFrameButton.pack(side=RIGHT, padx=10)
     deleteUserUserRockFrameButton.pack(side=RIGHT, padx=10)
     refreshUserRockTableData(userID)
+def LikePost(p):
+    conn = connectDB()
+    cursor = conn.cursor()
+    cursor.execute("SELECT userID FROM likes WHERE postID = %s AND userID = %s;", (p[0],currentUserID))
+    likers = cursor.fetchall()
+    skip = False
+    if len(likers) == 0:
+        cursor.execute("INSERT INTO likes (userID,postID) VALUES (%s , %s);",(p[0],currentUserID))
+        print("added a like")
+        return
+    likers = likers[0]
+    if currentUserID == likers[0]:
+        cursor.execute("DELETE FROM likes WHERE postID = %s AND userID = %s;",(p[0],currentUserID))
+        print("removed a like")
+    cursor.close()
+    conn.close()
+
+        
 #works right now it just displays all post with option for a detailed view
 #takes in the currentUserID it doesn't use it right now but it could use it to display post a user made etc
 def displayImage(currentUserID):
@@ -563,7 +581,11 @@ def displayImage(currentUserID):
         #Description
         descriptionLabel = Label(detailedWindow, text=f"Description: {p[1]}", font=("Arial", 10))
         descriptionLabel.pack(pady=5)
-        
+        #likes
+        descriptionLabel = Label(detailedWindow, text=f"Likes: {p[6]}", font=("Arial", 10))
+        descriptionLabel.pack(pady=5)
+        likeButton = Button(detailedWindow, text="Like", command=lambda p=post: LikePost(p))
+        likeButton.pack()
         cursor.close()
         conn.close()
     root.title("Posts")
@@ -610,7 +632,7 @@ def displayImage(currentUserID):
 
 
 currentUserID = -1
-#fillDB() #this fills rock table with rocks 
+fillDB() #this fills rock table with rocks 
 root = Tk()
 root.title("A Database that Rocks")
 
