@@ -1,2 +1,5 @@
 mysql-connector-python
 tk
+pillow
+requests
+beautifulsoup4
