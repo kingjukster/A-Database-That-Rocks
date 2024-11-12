@@ -1,7 +1,7 @@
 import mysql.connector
 from tkinter import *
 from tkinter import ttk
-from tkinter import messagebox
+from tkinter import messagebox, filedialog
 from PIL import Image, ImageTk
 import io
 import csv
@@ -37,7 +37,7 @@ def fillDB():
             finally:
                 cursor.close()
                 conn.close()
-
+#needs updated/removed
 def populateRockTable():
     try:
         conn = connectDB()
@@ -53,7 +53,7 @@ def populateRockTable():
     finally:
         cursor.close()
         conn.close()
-
+#needs updated/removed
 def populateUserRockTable(userID=None):
     try:
         conn = connectDB()
@@ -162,9 +162,10 @@ def loginUser():
             #basic admin check
             if userName.split(" ")[0] == "ADMIN" and password == "0":
                 titleFrame.pack_forget()
+                #root.withdraw()
                 messagebox.showinfo("Success", "ADMIN login successful!")
                 loginWindow.destroy()
-                showUserRockFrame(1)
+                displayImage(1)
                 return
             else:
                 messagebox.showerror("Error", "ADMIN password incorrect!")
@@ -203,9 +204,11 @@ def loginUser():
                 global currentUserID 
                 currentUserID = user[0]
                 titleFrame.pack_forget()
+                
                 messagebox.showinfo("Success", "User login successful!")
                 loginWindow.destroy()
-                showUserRockFrame(currentUserID)
+                displayImage(currentUserID)
+                #root.withdraw()
             else:
                 messagebox.showerror("Error", "Invalid username.")
             
@@ -348,7 +351,7 @@ def editUser():
     else:
         messagebox.showerror("Error", "ADMIN ONLY!")
             
-
+#needs edited
 def addRock():
     def submitRock():
         try:
@@ -408,78 +411,98 @@ def addRock():
     rockDescriptionEntry.grid(row=5, column=1, padx=10, pady=5)
 
     Button(addRockWindow, text="Submit", command=submitRock).grid(row=6, columnspan=2, pady=10)
-
+#works somehow 11/12
 def addPost():
     def submitPost():
         try:
+            global currentUserID
             conn = connectDB()
-            cursor = conn.cursor()
+            cursor = conn.cursor(buffered=True)
             
-            rockName = rockNameEntry.get()
-            typeID = typeIDEntry.get()
-            mineralComposition = mineralCompositionEntry.get()
-            locationFound = locationFoundEntry.get()
-            classification = classificationEntry.get()
+            rockName = selectedRock.get()
+            cursor.execute("SELECT rockID FROM rocks WHERE rockName=%s", (rockName,))
+            result = cursor.fetchone()
+            if result:
+                rockID = result[0]
+            else:
+                cursor.fetchall()
+                messagebox.showerror("Error", "Rock not found in the database.")
+                return
+            rockColor = selectedColor.get()
             rockDescription = rockDescriptionEntry.get()
+            image = imageEntry.get()
+            #print(image)
             cursor.execute("""
-                INSERT INTO rocks (rockName, typeID, mineralComposition, locationFound, classification, rockDescription)
-                VALUES (%s, %s, %s, %s, %s, %s)
-            """, (rockName, typeID, mineralComposition, locationFound, classification, rockDescription))
-            
+                INSERT INTO posts (postDescription, postUserID, images, rockColor, rockID)
+                VALUES (%s, %s, %s, %s, %s)
+            """, (rockDescription, currentUserID, image, rockColor, rockID))
             conn.commit()
-            messagebox.showinfo("Success", "Rock added successfully!")
+            messagebox.showinfo("Success", "Post added successfully!")
             
             addPostWindow.destroy()
             
-            refreshRockTableData()
+            #need to edit
+            #refreshRockTableData()
         
         except mysql.connector.Error as err:
             print(f"Error: {err}")
-            messagebox.showerror("Error", "Failed to add rock.")
+            messagebox.showerror("Error", "Failed to add post.")
         finally:
             cursor.close()
             conn.close()
-    
+    def uploadImage():
+        filePath = filedialog.askopenfilename(
+            title="Select Image",
+            filetypes=[("JPEG files", "*.jpg *.jpeg")]
+        )
+        if filePath:
+            imageEntry.delete(0, END)
+            imageEntry.insert(0, filePath)
+
     addPostWindow = Toplevel(root)
     addPostWindow.title("Add New Post")
 
+    conn = connectDB()
+    cursor = conn.cursor()
+    cursor.execute("SELECT rockName FROM rocks")
+    rocks = [row[0] for row in cursor.fetchall()]
     Label(addPostWindow, text="Rock Name:").grid(row=0, column=0, padx=10, pady=5)
-    rockNameEntry = Entry(addPostWindow)
-    rockNameEntry.grid(row=0, column=1, padx=10, pady=5)
+    selectedRock = StringVar(value=rocks[0])
+    rockNameDropDown = OptionMenu(addPostWindow, selectedRock, *rocks)
+    rockNameDropDown.grid(row=0, column=1, padx=10, pady=5)
+    cursor.close()
+    conn.close()
 
-    Label(addPostWindow, text="Type ID:").grid(row=1, column=0, padx=10, pady=5)
-    typeIDEntry = Entry(addPostWindow)
-    typeIDEntry.grid(row=1, column=1, padx=10, pady=5)
+    colors = ['Red','Black','White','Green','Yellow','Orange','Blue','Purple']
+    Label(addPostWindow, text="Rock Color:").grid(row=1, column=0, padx=10, pady=5)
+    selectedColor = StringVar(value=colors[0])
+    rockColorDropDown = OptionMenu(addPostWindow, selectedColor, *colors)
+    rockColorDropDown.grid(row=1, column=1, padx=10, pady=5)
 
-    Label(addPostWindow, text="Mineral Composition:").grid(row=2, column=0, padx=10, pady=5)
-    mineralCompositionEntry = Entry(addPostWindow)
-    mineralCompositionEntry.grid(row=2, column=1, padx=10, pady=5)
-
-    Label(addPostWindow, text="Location Found:").grid(row=3, column=0, padx=10, pady=5)
-    locationFoundEntry = Entry(addPostWindow)
-    locationFoundEntry.grid(row=3, column=1, padx=10, pady=5)
-
-    Label(addPostWindow, text="Classification:").grid(row=4, column=0, padx=10, pady=5)
-    classificationEntry = Entry(addPostWindow)
-    classificationEntry.grid(row=4, column=1, padx=10, pady=5)
-
-    Label(addPostWindow, text="Rock Description:").grid(row=5, column=0, padx=10, pady=5)
+    Label(addPostWindow, text="Rock Description:").grid(row=2, column=0, padx=10, pady=5)
     rockDescriptionEntry = Entry(addPostWindow)
-    rockDescriptionEntry.grid(row=5, column=1, padx=10, pady=5)
+    rockDescriptionEntry.grid(row=2, column=1, padx=10, pady=5)
+    
+    Label(addPostWindow, text="Select Image:").grid(row=3, column=0, padx=10, pady=5)
+    imageEntry = Entry(addPostWindow)
+    imageEntry.grid(row=3, column=1, padx=10, pady=5)
+    uploadButton = Button(addPostWindow, text="Upload", command=uploadImage)
+    uploadButton.grid(row=3, column=2, padx=5, pady=5)
 
-    Button(addPostWindow, text="Submit", command=submitPost).grid(row=6, columnspan=2, pady=10)
-
+    Button(addPostWindow, text="Submit", command=submitPost).grid(row=4, columnspan=2, pady=10)
+#needs updated/removed
 def refreshRockTableData():
     for row in rockTable.get_children():
         rockTable.delete(row)
     populateRockTable()
-
+#needs updated/removed
 def refreshUserRockTableData(userID=None):
     for row in userRockTable.get_children():
         userRockTable.delete(row)
     populateUserRockTable(userID)
 
 #reveals rock table
+#needs updated/removed
 def showRockFrame():
     userRockTableFrame.pack_forget()
     rockTableFrame.pack(fill=BOTH, expand=True)
@@ -489,7 +512,7 @@ def showRockFrame():
     switchToUserRockTable.pack(side=LEFT, padx=10)
     quitRockFrameButton.pack(side=RIGHT, padx=10)
     refreshRockTableData()
-
+#needs updated/removed
 def showUserRockFrame(userID):
     rockTableFrame.pack_forget()
     userRockTableFrame.pack(fill=BOTH, expand=True)
@@ -499,41 +522,90 @@ def showUserRockFrame(userID):
     quitUserRockFrameButton.pack(side=RIGHT, padx=10)
     deleteUserUserRockFrameButton.pack(side=RIGHT, padx=10)
     refreshUserRockTableData(userID)
-
-def retrieveImage(imageID):
-    try:
+#works right now it just displays all post with option for a detailed view
+#takes in the currentUserID it doesn't use it right now but it could use it to display post a user made etc
+def displayImage(currentUserID):
+    def detailedView(p):
+        detailedWindow = Toplevel()
+        detailedWindow.title(f"NAME THIS")
+        detailedWindow.geometry("400x600")
         conn = connectDB()
         cursor = conn.cursor()
+        imagePath = p[3]
+        if imagePath:
+            try:
+                image = Image.open(imagePath)
+                image = image.resize((300, 300))
+                photo = ImageTk.PhotoImage(image)
+                imageLabel = Label(detailedWindow, image=photo)
+                imageLabel.image = photo
+                imageLabel.pack(pady=10)
+            except Exception as e:
+                Label(detailedWindow, text="Error loading image").pack()
+                print(f"Error loading image: {e}")
+        #User Name
+        cursor.execute("SELECT CONCAT_WS(' ', fName, mName, lName) as fullName FROM users WHERE userID=%s", (p[5],))
+        user = cursor.fetchall()
+        user = user[0]
+        userName = user[0]
+        userLabel = Label(detailedWindow, text=f"Posted by: {userName}", font=("Arial", 10))
+        userLabel.pack(pady=5)
+        #Rock Name
+        cursor.execute("SELECT rockName FROM rocks WHERE rockID=%s", (p[5],))
+        rocks = cursor.fetchall()
+        rock = rocks[0]
+        rockName = rock[0]
+        rockLabel = Label(detailedWindow, text=f"Rock Name: {rockName}", font=("Arial", 10))
+        rockLabel.pack(pady=5)
+        #Rock Color
+        colorLabel = Label(detailedWindow, text=f"Rock Color: {p[4]}", font=("Arial", 10))
+        colorLabel.pack(pady=5)
+        #Description
+        descriptionLabel = Label(detailedWindow, text=f"Description: {p[1]}", font=("Arial", 10))
+        descriptionLabel.pack(pady=5)
         
-        cursor.execute("SELECT imageData FROM images WHERE imageID = %s", (imageID,))
-        image = cursor.fetchone()
-        
-        if image:
-            return image[0]
-        else:
-            print("Image not found.")
-            return None
-
-    except mysql.connector.Error as err:
-        print(f"Error: {err}")
-        return None
-    finally:
         cursor.close()
         conn.close()
-
-def displayImage(imageID, frame, col, row):
-    imageData = retrieveImage(imageID)
-    
-    if imageData:
-        image = Image.open(io.BytesIO(imageData))
-        image.thumbnail((100, 100))
-        photo = ImageTK.PhotoImage(image)
+    root.title("Posts")
+    columnsPerRow = 3
+    conn = connectDB()
+    cursor = conn.cursor()
+    cursor.execute("SELECT COUNT(*) AS totalRows FROM posts")
+    result = cursor.fetchone()
+    numPosts = result[0]
+    for i in range(numPosts):
+        row = i // columnsPerRow
+        col = i % columnsPerRow
         
-        label = Label(frame, image=photo)
-        label.image = photo
-        label.pack(row=row, column=1, padx=10, pady=10)
-    else:
-        print("No image to display.")
+        cursor.execute("SELECT * FROM posts WHERE postID=%s", (i+1,))
+        posts = cursor.fetchall()
+        post = posts[0]
+        cursor.execute("SELECT rockName FROM rocks WHERE rockID=%s", (post[5],))
+        rocks = cursor.fetchall()
+        rock = rocks[0]
+        postFrame = Frame(root, borderwidth=1, relief="solid", padx=10, pady=10)
+        postFrame.grid(row=row, column=col, padx=5, pady=5, sticky="nsew")
+        titleLabel = Label(postFrame, text=f"{post[4]} {rock[0]}", font=("Arial", 12, "bold"))
+        titleLabel.pack()
+        imagePath = post[3]
+        if imagePath:
+            try:
+                image = Image.open(imagePath)
+                image = image.resize((100, 100))
+                photo = ImageTk.PhotoImage(image)
+                imageLabel = Label(postFrame, image=photo)
+                imageLabel.image = photo
+                imageLabel.pack()
+            except Exception as e:
+                print(f"Error loading image for post {i + 1}: {e}")
+        viewButton = Button(postFrame, text="View", command=lambda p=post: detailedView(p))
+        viewButton.pack()
+        
+    for col in range(columnsPerRow):
+        root.grid_columnconfigure(col, weight=1)
+    
+    cursor.close()
+    conn.close()
 
 
 
@@ -566,6 +638,7 @@ loginButton.pack(pady=20)
 
 quitButton = Button(titleFrame, text="Quit", font=("Helvetica", 20), command=quitApp)
 quitButton.place(relx=0.95, rely=0.95, anchor=SE)
+
 
 
 #this frame displays the rock table

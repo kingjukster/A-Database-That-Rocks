@@ -40,17 +40,6 @@ CREATE TABLE rockMineral (
     PRIMARY KEY (rockID, mineralID)
 );
 
-CREATE TABLE posts(
-    postID int NOT NULL AUTO_INCREMENT PRIMARY KEY,
-    postDescription TEXT NOT NUll,
-    #postUsername VARCHAR(255) FOREIGN KEY postUsername REFERENCES users(userID),
-    images VARCHAR(255),
-    rockColor ENUM ('Red','Black','White','Green','Yellow','Orange','Blue','Purple'),
-    rockID int,
-    FOREIGN KEY (rockID) REFERENCES rocks(rockID)
-);
-
-
 CREATE TABLE users (
     userID int AUTO_INCREMENT,
     userPassword varchar(255),
@@ -60,6 +49,17 @@ CREATE TABLE users (
     #postID int,
     #FOREIGN KEY (postID) REFERENCES posts(postID)
     PRIMARY KEY (userID)
+);
+
+CREATE TABLE posts(
+    postID int NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    postDescription TEXT NOT NUll,
+    postUserID int,
+    images VARCHAR(255),
+    rockColor ENUM ('Red','Black','White','Green','Yellow','Orange','Blue','Purple'),
+    rockID int,
+    FOREIGN KEY (postUserID) REFERENCES users(userID),
+    FOREIGN KEY (rockID) REFERENCES rocks(rockID)
 );
 
 CREATE TABLE likes (
@@ -87,7 +87,10 @@ VALUES
 ('Calcite', 3),
 ('Hornblende', 5);
 
-INSERT INTO users (userPassword, fName, mName, lName) VALUES ('p', 'ADMIN', NULL, NULL), ('0', 'Terrell', 'Michael', 'Heredia');
+INSERT INTO posts (`postDescription`, `postUserID`, `images`, `rockColor`, `rockID`)
+VALUES ('This is rock', 2, 'C:/Users/horne/Pictures/Saved Pictures/istockphoto-1141277826-612x612.jpg', 'Red', 1)
+
+INSERT INTO users (userPassword, fName, mName, lName) VALUES ('p', 'ADMIN', NULL, 'l'), ('0', 'Terrell', 'Michael', 'Heredia');
 
 #SHOW TABLES;
 
