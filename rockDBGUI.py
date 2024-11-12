@@ -530,16 +530,27 @@ def LikePost(p):
     skip = False
     if len(likers) == 0:
         cursor.execute("INSERT INTO likes (userID,postID) VALUES (%s , %s);",(p[0],currentUserID))
-        print("added a like")
+        conn.commit()  # Commit the INSERT operation
+        print(f"added a like, {p[0]}, {currentUserID}")
         return
     likers = likers[0]
     if currentUserID == likers[0]:
         cursor.execute("DELETE FROM likes WHERE postID = %s AND userID = %s;",(p[0],currentUserID))
+        conn.commit()  # Commit the INSERT operation
         print("removed a like")
     cursor.close()
     conn.close()
 
-        
+def updatelikes(p):
+    conn = connectDB()
+    cursor = conn.cursor()
+    cursor.execute("SELECT COUNT(*) AS totalRows FROM likes WHERE postID = %s;", (p[0],))
+    result = cursor.fetchone()
+    numLikes = result[0]
+    cursor.close()
+    conn.close()
+    return numLikes
+
 #works right now it just displays all post with option for a detailed view
 #takes in the currentUserID it doesn't use it right now but it could use it to display post a user made etc
 def displayImage(currentUserID):
@@ -582,8 +593,9 @@ def displayImage(currentUserID):
         descriptionLabel = Label(detailedWindow, text=f"Description: {p[1]}", font=("Arial", 10))
         descriptionLabel.pack(pady=5)
         #likes
-        descriptionLabel = Label(detailedWindow, text=f"Likes: {p[6]}", font=("Arial", 10))
-        descriptionLabel.pack(pady=5)
+        likes = updatelikes(p)
+        likeLabel = Label(detailedWindow, text=f"Likes: {likes}", font=("Arial", 10))
+        likeLabel.pack(pady=5)
         likeButton = Button(detailedWindow, text="Like", command=lambda p=post: LikePost(p))
         likeButton.pack()
         cursor.close()

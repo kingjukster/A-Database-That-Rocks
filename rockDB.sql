@@ -58,6 +58,7 @@ CREATE TABLE posts(
     images VARCHAR(255),
     rockColor ENUM ('Red','Black','White','Green','Yellow','Orange','Blue','Purple'),
     rockID int,
+    likes int,
     FOREIGN KEY (postUserID) REFERENCES users(userID),
     FOREIGN KEY (rockID) REFERENCES rocks(rockID)
 );
@@ -91,6 +92,10 @@ INSERT INTO posts (`postDescription`, `postUserID`, `images`, `rockColor`, `rock
 VALUES ('This is rock', 2, 'C:/Users/horne/Pictures/Saved Pictures/istockphoto-1141277826-612x612.jpg', 'Red', 1)
 
 INSERT INTO users (userPassword, fName, mName, lName) VALUES ('p', 'ADMIN', NULL, 'l'), ('0', 'Terrell', 'Michael', 'Heredia');
+INSERT INTO likes (userID,postID) VALUES (1,1);
+DELETE from likes WHERE userID =1 AND postID = 1 ;
+
+
 
 #SHOW TABLES;
 
