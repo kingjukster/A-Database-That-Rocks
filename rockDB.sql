@@ -56,7 +56,7 @@ CREATE TABLE posts(
     postDescription TEXT NOT NUll,
     postUserID int,
     images VARCHAR(255),
-    rockColor ENUM ('Red','Black','White','Green','Yellow','Orange','Blue','Purple'),
+    rockColor ENUM ('Black', 'Blue', 'Green', 'Orange', 'Purple', 'Red', 'White', 'Yellow'),
     rockID int,
     FOREIGN KEY (postUserID) REFERENCES users(userID),
     FOREIGN KEY (rockID) REFERENCES rocks(rockID)
@@ -88,9 +88,13 @@ VALUES
 ('Hornblende', 5);
 
 INSERT INTO posts (`postDescription`, `postUserID`, `images`, `rockColor`, `rockID`)
-VALUES ('This is rock', 2, 'C:/Users/Terrell/database/A-Database-That-Rocks/Granite.jpg', 'Red', 1)
+VALUES 
+('This is rock', 2, 'C:/Users/Terrell/database/A-Database-That-Rocks/Granite.jpg', 'Red', 1),
+('This is rock', 2, 'C:/Users/horne/Pictures/Cyberpunk 2077/photomode_07022024_001749.png', 'Black', 1)
 
 INSERT INTO users (userPassword, fName, mName, lName) VALUES ('p', 'ADMIN', NULL, 'l'), ('0', 'Terrell', 'Michael', 'Heredia');
+
+SELECT * FROM posts ORDER BY rockColor 
 
 #SHOW TABLES;
 
