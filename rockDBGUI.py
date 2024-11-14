@@ -529,7 +529,7 @@ def LikePost(p):
     likers = cursor.fetchall()
     skip = False
     if len(likers) == 0:
-        cursor.execute("INSERT INTO likes (userID,postID) VALUES (%s , %s);",(p[0],currentUserID))
+        cursor.execute("INSERT INTO likes (userID,postID) VALUES (%s , %s);",(currentUserID,p[0]))
         conn.commit()  # Commit the INSERT operation
         print(f"added a like, {p[0]}, {currentUserID}")
         return
@@ -538,6 +538,7 @@ def LikePost(p):
         cursor.execute("DELETE FROM likes WHERE postID = %s AND userID = %s;",(p[0],currentUserID))
         conn.commit()  # Commit the INSERT operation
         print("removed a like")
+    updatelikes(p)
     cursor.close()
     conn.close()
 
@@ -593,9 +594,9 @@ def displayImage(currentUserID):
         descriptionLabel = Label(detailedWindow, text=f"Description: {p[1]}", font=("Arial", 10))
         descriptionLabel.pack(pady=5)
         #likes
-        descriptionLabel = Label(detailedWindow, text=f"Likes: {p[6]}", font=("Arial", 10))
-        descriptionLabel.pack(pady=5)
-        likeButton = Button(detailedWindow, text="Like", command=lambda p=post: LikePost(p))
+        LikeLabel = Label(detailedWindow, text=f"Likes: {updatelikes(p)}", font=("Arial", 10))
+        LikeLabel.pack(pady=5)
+        likeButton = Button(detailedWindow, text="Like", command=lambda p=p: LikePost(p))
         likeButton.pack()
         cursor.close()
         conn.close()
