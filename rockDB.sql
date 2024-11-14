@@ -108,6 +108,7 @@ INSERT INTO rockmineral(`rockID`,`mineralID`)
 VALUES
 (26,1)
 
+
 INSERT INTO posts (`postDescription`, `postUserID`, `images`, `rockColor`, `rockID`)
 VALUES 
 ('This is rock', 2, 'C:/Users/Terrell/database/A-Database-That-Rocks/Granite.jpg', 'Red', 1),
