@@ -453,7 +453,7 @@ def addPost():
     def uploadImage():
         filePath = filedialog.askopenfilename(
             title="Select Image",
-            filetypes=[("JPEG files", "*.jpg *.jpeg")]
+            filetypes=[("JPEG/PNG files", "*.jpg *.jpeg *.png")]
         )
         if filePath:
             imageEntry.delete(0, END)
@@ -473,7 +473,7 @@ def addPost():
     cursor.close()
     conn.close()
 
-    colors = ['Red','Black','White','Green','Yellow','Orange','Blue','Purple']
+    colors = ['Black', 'Blue', 'Green', 'Orange', 'Purple', 'Red', 'White', 'Yellow']
     Label(addPostWindow, text="Rock Color:").grid(row=1, column=0, padx=10, pady=5)
     selectedColor = StringVar(value=colors[0])
     rockColorDropDown = OptionMenu(addPostWindow, selectedColor, *colors)
@@ -593,68 +593,74 @@ def displayImage(currentUserID):
         descriptionLabel = Label(detailedWindow, text=f"Description: {p[1]}", font=("Arial", 10))
         descriptionLabel.pack(pady=5)
         #likes
-        likes = updatelikes(p)
-        likeLabel = Label(detailedWindow, text=f"Likes: {likes}", font=("Arial", 10))
-        likeLabel.pack(pady=5)
+        descriptionLabel = Label(detailedWindow, text=f"Likes: {p[6]}", font=("Arial", 10))
+        descriptionLabel.pack(pady=5)
         likeButton = Button(detailedWindow, text="Like", command=lambda p=post: LikePost(p))
         likeButton.pack()
         cursor.close()
         conn.close()
+    def refresh(event=None):
+        conn = connectDB()
+        cursor = conn.cursor()
+        filter, direction = selectedOption.get().split(" ")
+        #direction = "DESC"
+        query = f"SELECT * FROM posts ORDER BY {filter} {direction}"
+        cursor.execute(query)
+        posts = cursor.fetchall()
+        for widget in root.winfo_children():
+            if isinstance(widget, Frame) and widget != toolBarFrame:
+                widget.destroy()
+        for i, post in enumerate(posts):
+            row = (i // columnsPerRow) + 1
+            col = i % columnsPerRow
+            cursor.execute("SELECT rockName FROM rocks WHERE rockID=%s", (post[5],))
+            rocks = cursor.fetchall()
+            rock = rocks[0]
+            postFrame = Frame(root, borderwidth=1, relief="solid", padx=10, pady=10)
+            postFrame.grid(row=row, column=col, padx=5, pady=5, sticky="nsew")
+            titleLabel = Label(postFrame, text=f"{post[4]} {rock[0]}", font=("Arial", 12, "bold"))
+            titleLabel.pack()
+            imagePath = post[3]
+            if imagePath:
+                try:
+                    image = Image.open(imagePath)
+                    image = image.resize((100, 100))
+                    photo = ImageTk.PhotoImage(image)
+                    imageLabel = Label(postFrame, image=photo)
+                    imageLabel.image = photo
+                    imageLabel.pack()
+                except Exception as e:
+                    print(f"Error loading image for post {i + 1}: {e}")
+            viewButton = Button(postFrame, text="View", command=lambda p=post: detailedView(p))
+            viewButton.pack()
+        
+        root.grid_rowconfigure(0, weight=0, minsize=50)
+        for col in range(columnsPerRow):
+            root.grid_columnconfigure(col, weight=1)
     root.title("Posts")
     columnsPerRow = 3
     conn = connectDB()
     cursor = conn.cursor()
     cursor.execute("SELECT COUNT(*) AS totalRows FROM posts")
     result = cursor.fetchone()
-    numPosts = result[0]
-    for i in range(numPosts):
-        row = (i // columnsPerRow) + 1
-        col = i % columnsPerRow
-        cursor.execute("SELECT * FROM posts WHERE postID=%s", (i+1,))
-        posts = cursor.fetchall()
-        print(posts)
-        post = posts[0]
-        cursor.execute("SELECT rockName FROM rocks WHERE rockID=%s", (post[5],))
-        rocks = cursor.fetchall()
-        rock = rocks[0]
-        postFrame = Frame(root, borderwidth=1, relief="solid", padx=10, pady=10)
-        postFrame.grid(row=row, column=col, padx=5, pady=5, sticky="nsew")
-        titleLabel = Label(postFrame, text=f"{post[4]} {rock[0]}", font=("Arial", 12, "bold"))
-        titleLabel.pack()
-        imagePath = post[3]
-        if imagePath:
-            try:
-                image = Image.open(imagePath)
-                image = image.resize((100, 100))
-                photo = ImageTk.PhotoImage(image)
-                imageLabel = Label(postFrame, image=photo)
-                imageLabel.image = photo
-                imageLabel.pack()
-            except Exception as e:
-                print(f"Error loading image for post {i + 1}: {e}")
-        viewButton = Button(postFrame, text="View", command=lambda p=post: detailedView(p))
-        viewButton.pack()
-    
-    root.grid_rowconfigure(0, weight=0, minsize=50)
-    for col in range(columnsPerRow):
-        root.grid_columnconfigure(col, weight=1)
     toolBarFrame = Frame(root, height=50)
     toolBarFrame.grid(row=0, column=0, sticky="n")
     quitButton = Button(toolBarFrame, text="Quit", command=quitApp)
     quitButton.grid(row=0, column=0, padx=10, pady=10, sticky="ne")
     addPostButton = Button(toolBarFrame, text="Add Post", command=addPost)
     addPostButton.grid(row=0, column=0, padx=100, pady=10, sticky="ne")
-    options = ["All", "Color"]
+    options = ["postID ASC", "postID DESC", "rockColor ASC", "rockColor DESC", "postUserID ASC", "postUserID DESC", "rockID ASC", "rockID DESC"]
     selectedOption = StringVar()
     selectedOption.set(options[0])
-    filterMenu = OptionMenu(toolBarFrame, selectedOption, *options)
+    filterMenu = OptionMenu(toolBarFrame, selectedOption, *options, command=refresh)
     filterMenu.grid(row=0, column=0, padx=200, pady=10, sticky="ne")
+    refresh()
     cursor.close()
     conn.close()
 
 
 currentUserID = -1
-fillDB() #this fills rock table with rocks 
+#fillDB() #this fills rock table with rocks 
 root = Tk()
 root.title("A Database that Rocks")
 
