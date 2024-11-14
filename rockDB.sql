@@ -84,9 +84,29 @@ INSERT INTO minerals (`mineralName`, `mineralHardness`)
 VALUES 
 ('Quartz', 7),
 ('Feldspar', 6),
-('Mica', 2),
+('Plagioclase', 6),
+('Pyroxene', 6),
+('Amphibole', 6),
+('Olivine', 7),
 ('Calcite', 3),
-('Hornblende', 5);
+('Dolomite', 4),
+('Mica', 3),
+('Serpentine', 4),
+('Garnet', 7),
+('Omphacite', 6),
+('Glaucophane', 6),
+('Lawsonite', 8),
+('Clay minerals', 3),
+('Carbon', 2),
+('Talc', 1);
+
+INSERT INTO rockmineral(`rockID`,`mineralID`)
+VALUES
+(1,2)
+
+INSERT INTO rockmineral(`rockID`,`mineralID`)
+VALUES
+(26,1)
 
 INSERT INTO posts (`postDescription`, `postUserID`, `images`, `rockColor`, `rockID`)
 VALUES 

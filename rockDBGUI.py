@@ -554,6 +554,20 @@ def updatelikes(p):
     conn.close()
     return numLikes
 
+def FindMinerals(rockNum):
+    conn = connectDB()
+    cursor = conn.cursor()
+    cursor.execute("SELECT mineralID FROM rockmineral WHERE rockID = %s;", (rockNum,))
+    result = cursor.fetchone()
+    minid = result[0]
+    cursor.execute("SELECT mineralName FROM minerals WHERE mineralID = %s;", (minid,))
+    result = cursor.fetchone()
+    minname = result[0]
+    cursor.close()
+    conn.close()
+    return minname
+    
+
 
 #works right now it just displays all post with option for a detailed view
 #takes in the currentUserID it doesn't use it right now but it could use it to display post a user made etc
@@ -577,7 +591,7 @@ def displayImage(currentUserID):
                 Label(detailedWindow, text="Error loading image").pack()
                 print(f"Error loading image: {e}")
         #User Name
-        cursor.execute("SELECT CONCAT_WS(' ', fName, mName, lName) as fullName FROM users WHERE userID=%s", (p[5],))
+        cursor.execute("SELECT CONCAT_WS(' ', fName, mName, lName) as fullName FROM users WHERE userID=%s", (p[2],))
         user = cursor.fetchall()
         user = user[0]
         userName = user[0]
@@ -596,6 +610,9 @@ def displayImage(currentUserID):
         #Description
         descriptionLabel = Label(detailedWindow, text=f"Description: {p[1]}", font=("Arial", 10))
         descriptionLabel.pack(pady=5)
+        # minerals its made of
+        MineralLabel = Label(detailedWindow, text=f"Main Mineral: {FindMinerals(p[5])}", font=("Arial", 10))
+        MineralLabel.pack(pady=5)
         #likes
         def refreshLikeLabel():
             likeCount = updatelikes(p)
