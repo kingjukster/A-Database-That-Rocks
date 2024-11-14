@@ -12,7 +12,7 @@ python -m pip install mysql-connector-python
 
 # In Progress
 1. script to fill database with rocks **almost done**
-2. addPost() **almost done**
+2. addPost() **almost done** need to pull the frame to the front after uploading image
 3. images **almost done**
 4. Put frame creation in their respective functions
 5. add filter options for posts frame
@@ -25,5 +25,6 @@ python -m pip install mysql-connector-python
 4. queryInfo()
 5. addMinerals()
 6. addRock()
+7. logout()
 
 [rock dataset](https://en.wikipedia.org/wiki/List_of_rock_types)

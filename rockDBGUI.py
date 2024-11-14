@@ -543,6 +543,7 @@ def LikePost(p):
         cursor.execute("DELETE FROM likes WHERE postID = %s AND userID = %s;",(p[0],currentUserID))
         conn.commit()  # Commit the INSERT operation
         print("removed a like")
+        
     updatelikes(p)
     cursor.close()
     conn.close()
@@ -556,6 +557,7 @@ def updatelikes(p):
     cursor.close()
     conn.close()
     return numLikes
+
 
 #works right now it just displays all post with option for a detailed view
 #takes in the currentUserID it doesn't use it right now but it could use it to display post a user made etc
@@ -599,9 +601,13 @@ def displayImage(currentUserID):
         descriptionLabel = Label(detailedWindow, text=f"Description: {p[1]}", font=("Arial", 10))
         descriptionLabel.pack(pady=5)
         #likes
+        def refreshLikeLabel():
+            likeCount = updatelikes(p)
+            LikeLabel.config(text=f"Likes: {likeCount}")
+        
         LikeLabel = Label(detailedWindow, text=f"Likes: {updatelikes(p)}", font=("Arial", 10))
         LikeLabel.pack(pady=5)
-        likeButton = Button(detailedWindow, text="Like", command=lambda p=p: (LikePost(p), refresh()))
+        likeButton = Button(detailedWindow, text="Like", command=lambda p=p: LikePost(p))
         likeButton.pack()
         cursor.close()
         conn.close()
@@ -666,6 +672,7 @@ def displayImage(currentUserID):
 
 
 currentUserID = -1
+detailedWindow = None
 #fillDB() #this fills rock table with rocks 
 root = Tk()
 root.title("A Database that Rocks")
