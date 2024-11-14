@@ -441,12 +441,8 @@ def addPost():
             
             addPostWindow.destroy()
             
-            displayImage.destroy()
-            
-            displayImage(1)
             #need to edit
             #refreshRockTableData()
-            
         
         except mysql.connector.Error as err:
             print(f"Error: {err}")
@@ -495,7 +491,6 @@ def addPost():
     uploadButton.grid(row=3, column=2, padx=5, pady=5)
 
     Button(addPostWindow, text="Submit", command=submitPost).grid(row=4, columnspan=2, pady=10)
-    
 #needs updated/removed
 def refreshRockTableData():
     for row in rockTable.get_children():
@@ -582,7 +577,7 @@ def displayImage(currentUserID):
                 Label(detailedWindow, text="Error loading image").pack()
                 print(f"Error loading image: {e}")
         #User Name
-        cursor.execute("SELECT CONCAT_WS(' ', fName, mName, lName) as fullName FROM users WHERE userID=%s", (p[2],))
+        cursor.execute("SELECT CONCAT_WS(' ', fName, mName, lName) as fullName FROM users WHERE userID=%s", (p[5],))
         user = cursor.fetchall()
         user = user[0]
         userName = user[0]
@@ -608,7 +603,7 @@ def displayImage(currentUserID):
         
         LikeLabel = Label(detailedWindow, text=f"Likes: {updatelikes(p)}", font=("Arial", 10))
         LikeLabel.pack(pady=5)
-        likeButton = Button(detailedWindow, text="Like", command=lambda p=p: LikePost(p))
+        likeButton = Button(detailedWindow, text="Like", command=lambda: [LikePost(p), refreshLikeLabel()])
         likeButton.pack()
         cursor.close()
         conn.close()
