@@ -461,6 +461,7 @@ def addPost():
 
     addPostWindow = Toplevel(root)
     addPostWindow.title("Add New Post")
+    addPostWindow.attributes("-topmost", True)
 
     conn = connectDB()
     cursor = conn.cursor()
