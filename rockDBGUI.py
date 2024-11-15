@@ -37,6 +37,29 @@ def fillDB():
             finally:
                 cursor.close()
                 conn.close()
+#this is the title frame
+def titleScreen():
+    global titleFrame
+    titleFrame = Frame(root)
+    root.config(bg='lightgrey')
+    titleFrame.config(bg='darkgrey')
+    titleFrame.grid(row=0, column=0, columnspan=3)
+    root.grid_rowconfigure(0, weight=1)
+    root.grid_columnconfigure(0, weight=1)
+    titleLabel = Label(titleFrame, text="A Database That Rocks", font=("Helvetica", 32))
+    titleLabel.grid(row=0, column=0, pady=(50, 20))
+    titleLabel.config(bg='darkgrey')
+    titleFrame.grid_rowconfigure(0, weight=1)
+    titleFrame.grid_columnconfigure(0, weight=1)
+    createUserButton = Button(titleFrame, text="Create User", font=("Helvetica", 20), command=createUser)
+    createUserButton.grid(row=1, column=0, pady=(10, 10))
+    createUserButton.config(bg='darkgrey')
+    loginButton = Button(titleFrame, text="Login", font=("Helvetica", 20), command=loginUser)
+    loginButton.grid(row=2, column=0, pady=(10, 10))
+    loginButton.config(bg='darkgrey')
+    quitButton = Button(titleFrame, text="Quit", font=("Helvetica", 20), command=quitApp)
+    quitButton.grid(row=3, column=0, sticky="se", padx=20, pady=20)
+    quitButton.config(bg='darkgrey')
 #needs updated/removed
 def populateRockTable():
     try:
@@ -96,7 +119,6 @@ def toggleFullscreen(event=None):
     root.attributes("-fullscreen", True)
     root.bind("<Escape>", exitFullscreen)
 
-
 def exitFullscreen(event=None):
     root.attributes("-fullscreen", False)
     root.bind("<Escape>", toggleFullscreen)
@@ -152,27 +174,29 @@ def createUser():
         
 #loginuser updated 11/7
 def loginUser():
-    def checkUser():
+    def checkUser(event=None):
+        global currentUserID
         userName = selected_user.get()
         password = passwordEntry.get()
         if not userName or not password:
             messagebox.showerror("Error", "Username or password cannot be empty.")
             return
-        elif len(userName.split(" ")) == 1:
+        elif len(userName.split(" ")) == 2:
+            fName, lName = userName.split(" ")
             #basic admin check
-            if userName.split(" ")[0] == "ADMIN" and password == "0":
+            if userName == "ADMIN ADMIN" and password == "0":
+                print("test")
                 titleFrame.pack_forget()
                 #root.withdraw()
                 messagebox.showinfo("Success", "ADMIN login successful!")
                 loginWindow.destroy()
-                displayImage(1)
+                currentUserID = -1
+                displayImage(currentUserID)#so you can still see posts as an admin
                 return
-            else:
+            elif userName == "ADMIN ADMIN":
                 messagebox.showerror("Error", "ADMIN password incorrect!")
                 return
             #end of admin check
-        elif len(userName.split(" ")) == 2:
-            fName, lName = userName.split(" ")
         else:
             fName, mName, lName = userName.split(" ")
         
@@ -199,9 +223,7 @@ def loginUser():
                             AND userPassword=%s
                             """, (fName, lName, password))
                 user = cursor.fetchone()
-            #print(user)
-            if user:
-                global currentUserID 
+            if user: 
                 currentUserID = user[0]
                 titleFrame.pack_forget()
                 
@@ -219,6 +241,7 @@ def loginUser():
             cursor.close()
             conn.close()
 
+    #global currentUserID
     loginWindow = Toplevel(root)
     loginWindow.title("Login")
     
@@ -239,7 +262,9 @@ def loginUser():
     passwordEntry.grid(row=1, column=1, padx=10, pady=5)
     ##
     Button(loginWindow, text="Login", command=checkUser).grid(row=6, columnspan=2, pady=10)
-        
+    loginWindow.bind("<Return>", checkUser)
+    
+
 #created editUser 11/7
 def editUser():
     def removeUser():
@@ -523,9 +548,11 @@ def showUserRockFrame(userID):
     quitUserRockFrameButton.pack(side=RIGHT, padx=10)
     deleteUserUserRockFrameButton.pack(side=RIGHT, padx=10)
     refreshUserRockTableData(userID)
+
 def LikePost(p):
     conn = connectDB()
     cursor = conn.cursor()
+    print(p[0],currentUserID)
     cursor.execute("SELECT userID FROM likes WHERE postID = %s AND userID = %s;", (p[0],currentUserID))
     likers = cursor.fetchall()
     skip = False
@@ -553,7 +580,6 @@ def updatelikes(p):
     cursor.close()
     conn.close()
     return numLikes
-
 
 #works right now it just displays all post with option for a detailed view
 #takes in the currentUserID it doesn't use it right now but it could use it to display post a user made etc
@@ -607,14 +633,19 @@ def displayImage(currentUserID):
         likeButton.pack()
         cursor.close()
         conn.close()
-    def refresh(event=None):
+    def refresh(event=None, queryNum = 0):
         conn = connectDB()
         cursor = conn.cursor()
         filter, direction = selectedOption.get().split(" ")
         #direction = "DESC"
-        query = f"SELECT * FROM posts ORDER BY {filter} {direction}"
-        cursor.execute(query)
+        filterQuery = f"SELECT * FROM posts ORDER BY {filter} {direction}"
+        userPostQuery = f"SELECT * FROM posts WHERE postUserID={currentUserID} ORDER BY {filter} {direction}"
+        queries = [filterQuery, userPostQuery]
+        print(queries[1])
+        cursor.execute(queries[queryNum])
         posts = cursor.fetchall()
+        print(posts)
+        print(queryNum)
         for widget in root.winfo_children():
             if isinstance(widget, Frame) and widget != toolBarFrame:
                 widget.destroy()
@@ -626,6 +657,7 @@ def displayImage(currentUserID):
             rock = rocks[0]
             postFrame = Frame(root, borderwidth=1, relief="solid", padx=10, pady=10)
             postFrame.grid(row=row, column=col, padx=5, pady=5, sticky="nsew")
+            postFrame.config(bg='darkgrey')
             titleLabel = Label(postFrame, text=f"{post[4]} {rock[0]}", font=("Arial", 12, "bold"))
             titleLabel.pack()
             imagePath = post[3]
@@ -644,7 +676,13 @@ def displayImage(currentUserID):
         
         root.grid_rowconfigure(0, weight=0, minsize=50)
         for col in range(columnsPerRow):
-            root.grid_columnconfigure(col, weight=1)
+            root.grid_columnconfigure(col, weight=1, uniform="posts")
+    def removeFrames():
+        for widget in root.winfo_children():
+            if isinstance(widget, Frame):
+                widget.destroy()
+
+    print(currentUserID)
     root.title("Posts")
     columnsPerRow = 3
     conn = connectDB()
@@ -653,22 +691,52 @@ def displayImage(currentUserID):
     result = cursor.fetchone()
     toolBarFrame = Frame(root, height=50)
     toolBarFrame.grid(row=0, column=0, sticky="n")
+    toolBarFrame.config(bg='lightgrey')
     quitButton = Button(toolBarFrame, text="Quit", command=quitApp)
     quitButton.grid(row=0, column=0, padx=10, pady=10, sticky="ne")
+    quitButton.config(bg='darkgrey')
     addPostButton = Button(toolBarFrame, text="Add Post", command=addPost)
-    addPostButton.grid(row=0, column=0, padx=100, pady=10, sticky="ne")
+    addPostButton.grid(row=0, column=1, padx=10, pady=10, sticky="ne")
+    addPostButton.config(bg='darkgrey')
     options = ["postID ASC", "postID DESC", "rockColor ASC", "rockColor DESC", "postUserID ASC", "postUserID DESC", "rockID ASC", "rockID DESC"]
     selectedOption = StringVar()
     selectedOption.set(options[0])
     filterMenu = OptionMenu(toolBarFrame, selectedOption, *options, command=refresh)
-    filterMenu.grid(row=0, column=0, padx=200, pady=10, sticky="ne")
+    filterMenu.grid(row=0, column=2, padx=10, pady=10, sticky="ne")
+    filterMenu.config(bg='darkgrey')
+    def toggleAllPosts():
+        userPostButton.grid_remove()
+        allPostButton.grid(row=0, column=3, padx=10, pady=10, sticky="ne")
+        refresh(None, 1)
+    def toggleUserPosts():
+        allPostButton.grid_remove()
+        userPostButton.grid(row=0, column=3, padx=10, pady=10, sticky="ne")
+        refresh()
+    userPostButton = Button(toolBarFrame, text="View User Posts", command=toggleAllPosts)
+    userPostButton.grid(row=0, column=3, padx=10, pady=10, sticky="ne")
+    userPostButton.config(bg='darkgrey')
+    allPostButton = Button(toolBarFrame, text="View All Posts", command=toggleUserPosts)
+    allPostButton.config(bg='darkgrey')
+    logoutButton = Button(toolBarFrame, text="Logout", command=lambda: [removeFrames(), titleScreen()])
+    logoutButton.grid(row=0, column=4, padx=10, pady=10, sticky="ne")
+    logoutButton.config(bg='darkgrey')
+    if currentUserID == -1:
+        deleteUser = Button(toolBarFrame, text="Edit Users", command=editUser)
+        deleteUser.grid(row=0, column=5, padx=10, pady=10, sticky="ne")
+        deleteUser.config(bg='darkgrey')
+    toolBarFrame.grid_columnconfigure(0, weight=1)
+    toolBarFrame.grid_columnconfigure(1, weight=1)
+    toolBarFrame.grid_columnconfigure(2, weight=1)
+    toolBarFrame.grid_columnconfigure(3, weight=1)
+    toolBarFrame.grid_columnconfigure(4, weight=1)
+    toolBarFrame.grid_columnconfigure(5, weight=1)
     refresh()
     cursor.close()
     conn.close()
 
 
 currentUserID = -1
-detailedWindow = None
+titleFrame = None
 #fillDB() #this fills rock table with rocks 
 root = Tk()
 root.title("A Database that Rocks")
@@ -682,22 +750,7 @@ screenHeight = root.winfo_screenheight()
 root.geometry(f"{screenWidth}x{screenHeight}")
 
 
-#this is the title frame
-titleFrame = Frame(root)
-titleFrame.pack(fill=BOTH, expand=True)
-
-titleLabel = Label(titleFrame, text="A Database That Rocks", font=("Helvetica", 32))
-titleLabel.pack(pady=100)
-
-createUserButton = Button(titleFrame, text="Create User", font=("Helvetica", 20), command=createUser)
-createUserButton.pack(pady=20)
-
-loginButton = Button(titleFrame, text="Login", font=("Helvetica", 20), command=loginUser)
-loginButton.pack(pady=20)
-
-quitButton = Button(titleFrame, text="Quit", font=("Helvetica", 20), command=quitApp)
-quitButton.place(relx=0.95, rely=0.95, anchor=SE)
-
+titleScreen()
 
 
 #this frame displays the rock table

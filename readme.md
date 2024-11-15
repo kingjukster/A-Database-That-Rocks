@@ -9,22 +9,25 @@ python -m pip install mysql-connector-python
 1. login()
 2. createUser()
 3. removeUser/editUser() *combined*
+4. images **almost done**
+5. addPost() **almost done** need to pull the frame to the front after uploading image
+6. viewPosts()
+7. logout()
+8. likePost()
 
 # In Progress
 1. script to fill database with rocks **almost done**
-2. addPost() **almost done** need to pull the frame to the front after uploading image
-3. images **almost done**
-4. Put frame creation in their respective functions
-5. add filter options for posts frame
-6. viewPosts()
-
+2. Put frame creation in their respective functions
+3. add filter options for posts frame
+4. add color schemes
+5. Move all buttons into the display function
 # ToDo
-1. likePost()
-2. modifyPost()
-3. removePost()
-4. queryInfo()
-5. addMinerals()
-6. addRock()
-7. logout()
+
+1. modifyPost()
+2. removePost()
+3. queryInfo()
+4. addMinerals()
+5. addRock()
+
 
 [rock dataset](https://en.wikipedia.org/wiki/List_of_rock_types)

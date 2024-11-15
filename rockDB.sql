@@ -93,13 +93,15 @@ VALUES
 ('This is rock', 2, 'C:/Users/Terrell/database/A-Database-That-Rocks/Granite.jpg', 'Red', 1),
 ('This is rock', 2, 'C:/Users/horne/Pictures/Cyberpunk 2077/photomode_07022024_001749.png', 'Black', 1)
 
-INSERT INTO users (userPassword, fName, mName, lName) VALUES ('p', 'ADMIN', NULL, 'l'), ('0', 'Terrell', 'Michael', 'Heredia');
+INSERT INTO users (userPassword, fName, mName, lName) VALUES ('p', 'ADMIN', NULL, 'l'), ('0', 'Terrell', 'Michael', 'Heredia'), ('addydaddy', 'ADMIN', NULL, 'ADMIN');
 INSERT INTO likes (userID,postID) VALUES (1,1);
 DELETE from likes WHERE userID =1 AND postID = 1 ;
 
 
 
 SELECT * FROM posts ORDER BY rockColor 
+
+SELECT * FROM posts WHERE postUserID=1 ORDER BY postID ASC
 
 #SHOW TABLES;
 
