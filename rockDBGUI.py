@@ -465,7 +465,90 @@ def addPost():
             messagebox.showinfo("Success", "Post added successfully!")
             
             addPostWindow.destroy()
-            
+
+def editPost():
+   def removePost():
+       if currentUserID == -1:
+           deleteWindow = Toplevel(root)
+           deleteWindow.title("Delete Post")
+           conn = connectDB()
+           cursor = conn.cursor()       
+           cursor.execute("""SELECT POSTID(Post) FROM posts""" )
+           userPosts = [row[0] for row in cursor.fetchall()]
+           conn.close()
+           Label(deleteWindow, text="Post:").grid(row=0, column=0, padx=10, pady=5)
+           selected_post = StringVar()
+           selected_post.set(userPosts[0])
+           userNameDropdown = OptionMenu(deleteWindow, selected_post, *userPosts)
+           userNameDropdown.grid(row=0, column=1, padx=10, pady=5)
+           Button(deleteWindow, text="Delete", command=removePost).grid(row=6, columnspan=2, pady=10)
+           Button(deleteWindow, text="Edit", command=makePostChanges).grid(row=7, columnspan=2, pady=10)
+       else:       
+           messagebox.showerror("Error", "ADMIN ONLY!")
+
+ def makePostChanges():
+       def savePostEdits(userID):
+           try:
+               conn = connectDB()
+               cursor = conn.cursor()
+               firstName = firstNameEntry.get()
+               middleName = middleNameEntry.get() or ""
+               lastName = lastNameEntry.get() or ""
+               password = passwordEntry.get()
+               cursor.execute("""
+               UPDATE users SET fName = %s, mName = %s, lName = %s, userPassword = %s
+               WHERE userID = %s
+           """, (firstName, middleName, lastName, password, userID))
+               conn.commit()
+               messagebox.showinfo("Success", "User edited successfully!")
+               editUserWindow.destroy()
+              
+           except mysql.connector.Error as err:
+               print(f"Error: {err}")
+               messagebox.showerror("Error", "Failed to edit user.")
+           finally:
+               cursor.close()
+               conn.close()
+      
+       try:
+           userName = selected_user.get()
+           firstName, middleName, lastName = userName.split(" ")
+           conn = connectDB()
+           cursor = conn.cursor()
+           cursor.execute("""
+                       SELECT * FROM users
+                       WHERE
+                       fName=%s
+                       AND mName=%s
+                       AND lName=%s
+                       """, (firstName, middleName, lastName))
+           user = cursor.fetchone()
+       except mysql.connector.Error as err:
+           print(f"Error: {err}")
+           messagebox.showerror("Error", "Failed to edit post.")
+       finally:
+           cursor.close()
+           conn.close()
+       editUserWindow = Toplevel(root)
+       editUserWindow.title("Edit Post")
+      
+       Label(editUserWindow, text="Rock ID:").grid(row=0, column=0, padx=10, pady=5)
+       firstNameEntry = Entry(editUserWindow)
+       firstNameEntry.insert(0, user[2])
+       firstNameEntry.grid(row=0, column=1, padx=10, pady=5)
+       ##
+       Label(editUserWindow, text="Color:").grid(row=1, column=0, padx=10, pady=5)
+       middleNameEntry = Entry(editUserWindow)
+       middleNameEntry.insert(0, user[3])
+       middleNameEntry.grid(row=1, column=1, padx=10, pady=5)
+       ##
+       Label(editUserWindow, text="Description").grid(row=2, column=0, padx=10, pady=5)
+       lastNameEntry = Entry(editUserWindow)
+       lastNameEntry.insert(0, user[4])
+       lastNameEntry.grid(row=2, column=1, padx=10, pady=5)
+       ##
+       Button(editUserWindow, text="Save", command=lambda: savePostEdits(user[0])).grid(row=6, columnspan=2, pady=10)
+
             #need to edit
             #refreshRockTableData()
         
