@@ -3,6 +3,7 @@ from tkinter import *
 from tkinter import ttk
 from tkinter import messagebox, filedialog
 from PIL import Image, ImageTk
+import hashlib
 import io
 import csv
 #
@@ -16,6 +17,18 @@ def connectDB():
 
 #fill db with rocks (name, class, subclass) 11/7
 def fillDB():
+    conn = connectDB()
+    cursor = conn.cursor()
+    cursor.execute("""
+           SELECT EXISTS (SELECT 1 FROM rocks);
+           """)
+    result = cursor.fetchone()  # This will return a tuple like (0,) or (1,)
+    exists = result[0]
+    if exists:
+        return
+    cursor.close()
+    conn.close()
+
     csvPath = "rock.csv"
     with open(csvPath, encoding="utf-8") as csvfile:
         csv_reader = csv.reader(csvfile)
@@ -28,9 +41,49 @@ def fillDB():
                 conn = connectDB()
                 cursor = conn.cursor()
                 cursor.execute("""
-                    INSERT INTO rocks (rockName, rockClass, rockSubClass)
+                    INSERT INTO rocks (rockName, rockClass, rockSubClass) 
                     VALUES (%s, %s, %s)
                     """, (rockName, rockClass, rockSubClass))
+                conn.commit()
+            except mysql.connector.Error as err:
+                print(f"Error: {err}")
+            finally:
+                cursor.close()
+                conn.close()
+    csvPath = "minerals.csv"
+    with open(csvPath, encoding="utf-8") as csvfile:
+        csv_reader = csv.reader(csvfile)
+        next(csv_reader)
+        for row in csv_reader:
+            rockID = row[0]
+            mineralID = row[1]
+            try:
+                conn = connectDB()
+                cursor = conn.cursor()
+                cursor.execute("""
+                    INSERT INTO minerals (mineralName, mineralHardness) 
+                    VALUES (%s, %s)
+                    """, (rockID, mineralID))
+                conn.commit()
+            except mysql.connector.Error as err:
+                print(f"Error: {err}")
+            finally:
+                cursor.close()
+                conn.close()
+    csvPath = "rockmineral.csv"
+    with open(csvPath, encoding="utf-8") as csvfile:
+        csv_reader = csv.reader(csvfile)
+        next(csv_reader)
+        for row in csv_reader:
+            rockID = row[0]
+            mineralID = row[1]
+            try:
+                conn = connectDB()
+                cursor = conn.cursor()
+                cursor.execute("""
+                    INSERT INTO rockmineral (rockID, mineralID) 
+                    VALUES (%s, %s)
+                    """, (rockID, mineralID))
                 conn.commit()
             except mysql.connector.Error as err:
                 print(f"Error: {err}")
@@ -114,10 +167,13 @@ def createUser():
             middleName = middleNameEntry.get() or None
             lastName = lastNameEntry.get()
             password = passwordEntry.get()
+            salt = "RockyBestMovieEva"
+            password += salt
+            password = hashlib.md5(password.encode())
             cursor.execute("""
             INSERT INTO users (fName, mName, lName, userPassword)
             VALUES (%s, %s, %s, %s)
-        """, (firstName, middleName, lastName, password))
+        """, (firstName, middleName, lastName, password.hexdigest()))
             conn.commit()
             messagebox.showinfo("Success", "User added successfully!")
             addUserWindow.destroy()
@@ -155,12 +211,15 @@ def loginUser():
     def checkUser(event=None):
         userName = selected_user.get()
         password = passwordEntry.get()
-        if not userName or not password:
+        salt = "RockyBestMovieEva"
+        password += salt
+        password = hashlib.md5(password.encode())
+        if not userName or not password.hexdigest():
             messagebox.showerror("Error", "Username or password cannot be empty.")
             return
         elif len(userName.split(" ")) == 1:
             #basic admin check
-            if userName.split(" ")[0] == "ADMIN" and password == "0":
+            if userName.split(" ")[0] == "ADMIN" and password.hexdigest() == "fb69d4f6b40e003093121da046bcced6":
                 titleFrame.pack_forget()
                 #root.withdraw()
                 messagebox.showinfo("Success", "ADMIN login successful!")
@@ -188,7 +247,7 @@ def loginUser():
                             AND mName=%s
                             AND lName=%s
                             AND userPassword=%s
-                            """, (fName, mName, lName, password))
+                            """, (fName, mName, lName, password.hexdigest()))
                 user = cursor.fetchone()
             else:
                 cursor.execute("""
@@ -197,7 +256,7 @@ def loginUser():
                             fName=%s 
                             AND lName=%s
                             AND userPassword=%s
-                            """, (fName, lName, password))
+                            """, (fName, lName, password.hexdigest()))
                 user = cursor.fetchone()
             #print(user)
             if user:
@@ -690,7 +749,7 @@ def displayImage(currentUserID):
 
 currentUserID = -1
 detailedWindow = None
-#fillDB() #this fills rock table with rocks 
+fillDB() #this fills rock table with rocks 
 root = Tk()
 root.title("A Database that Rocks")
 
