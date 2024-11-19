@@ -152,7 +152,7 @@ def createUser():
         
 #loginuser updated 11/7
 def loginUser():
-    def checkUser():
+    def checkUser(event=None):
         userName = selected_user.get()
         password = passwordEntry.get()
         if not userName or not password:
@@ -237,8 +237,11 @@ def loginUser():
     Label(loginWindow, text="Password:").grid(row=1, column=0, padx=10, pady=5)
     passwordEntry = Entry(loginWindow)
     passwordEntry.grid(row=1, column=1, padx=10, pady=5)
+    passwordEntry.focus_set()
     ##
     Button(loginWindow, text="Login", command=checkUser).grid(row=6, columnspan=2, pady=10)
+    loginWindow.bind("<Return>", checkUser)
+
         
 #created editUser 11/7
 def editUser():
@@ -642,6 +645,7 @@ def displayImage(currentUserID):
             rocks = cursor.fetchall()
             rock = rocks[0]
             postFrame = Frame(root, borderwidth=1, relief="solid", padx=10, pady=10)
+            postFrame.config(bg="darkgrey")
             postFrame.grid(row=row, column=col, padx=5, pady=5, sticky="nsew")
             titleLabel = Label(postFrame, text=f"{post[4]} {rock[0]}", font=("Arial", 12, "bold"))
             titleLabel.pack()
