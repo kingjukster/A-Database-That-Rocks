@@ -185,7 +185,7 @@ def loginUser():
             fName, lName = userName.split(" ")
             #basic admin check
             if userName == "ADMIN ADMIN" and password == "0":
-                print("test")
+                #print("test")
                 titleFrame.pack_forget()
                 #root.withdraw()
                 messagebox.showinfo("Success", "ADMIN login successful!")
@@ -552,7 +552,7 @@ def showUserRockFrame(userID):
 def LikePost(p):
     conn = connectDB()
     cursor = conn.cursor()
-    print(p[0],currentUserID)
+    #print(p[0],currentUserID)
     cursor.execute("SELECT userID FROM likes WHERE postID = %s AND userID = %s;", (p[0],currentUserID))
     likers = cursor.fetchall()
     skip = False
@@ -601,7 +601,7 @@ def displayImage(currentUserID):
                 imageLabel.pack(pady=10)
             except Exception as e:
                 Label(detailedWindow, text="Error loading image").pack()
-                print(f"Error loading image: {e}")
+                #print(f"Error loading image: {e}")
         #User Name
         cursor.execute("SELECT CONCAT_WS(' ', fName, mName, lName) as fullName FROM users WHERE userID=%s", (p[5],))
         user = cursor.fetchall()
@@ -641,11 +641,11 @@ def displayImage(currentUserID):
         filterQuery = f"SELECT * FROM posts ORDER BY {filter} {direction}"
         userPostQuery = f"SELECT * FROM posts WHERE postUserID={currentUserID} ORDER BY {filter} {direction}"
         queries = [filterQuery, userPostQuery]
-        print(queries[1])
+        #print(queries[1])
         cursor.execute(queries[queryNum])
         posts = cursor.fetchall()
-        print(posts)
-        print(queryNum)
+        #print(posts)
+        #print(queryNum)
         for widget in root.winfo_children():
             if isinstance(widget, Frame) and widget != toolBarFrame:
                 widget.destroy()
@@ -658,7 +658,7 @@ def displayImage(currentUserID):
             postFrame = Frame(root, borderwidth=1, relief="solid", padx=10, pady=10)
             postFrame.grid(row=row, column=col, padx=5, pady=5, sticky="nsew")
             postFrame.config(bg='darkgrey')
-            titleLabel = Label(postFrame, text=f"{post[4]} {rock[0]}", font=("Arial", 12, "bold"))
+            titleLabel = Label(postFrame, text=f"{post[4]} {rock[0]}", font=("Arial", 12, "bold"), bg="darkgrey")
             titleLabel.pack()
             imagePath = post[3]
             if imagePath:
@@ -670,7 +670,8 @@ def displayImage(currentUserID):
                     imageLabel.image = photo
                     imageLabel.pack()
                 except Exception as e:
-                    print(f"Error loading image for post {i + 1}: {e}")
+                    Label(postFrame, text="Error loading image", bg="darkgrey").pack()
+                    #print(f"Error loading image for post {i + 1}: {e}")
             viewButton = Button(postFrame, text="View", command=lambda p=post: detailedView(p))
             viewButton.pack()
         
@@ -682,7 +683,7 @@ def displayImage(currentUserID):
             if isinstance(widget, Frame):
                 widget.destroy()
 
-    print(currentUserID)
+    #print(currentUserID)
     root.title("Posts")
     columnsPerRow = 3
     conn = connectDB()
@@ -736,23 +737,21 @@ def displayImage(currentUserID):
 
 
 currentUserID = -1
-titleFrame = None
+#titleFrame = None
 #fillDB() #this fills rock table with rocks 
 root = Tk()
 root.title("A Database that Rocks")
 
-root.attributes("-fullscreen", True)
+#root.attributes("-fullscreen", True)
 root.bind("<Escape>", toggleFullscreen)
-root.bind("<Escape>", exitFullscreen)
+#root.bind("<Escape>", exitFullscreen)
 
 screenWidth = root.winfo_screenwidth()
 screenHeight = root.winfo_screenheight()
 root.geometry(f"{screenWidth}x{screenHeight}")
-
-
 titleScreen()
 
-
+"""
 #this frame displays the rock table
 rockTableFrame = Frame(root)
 #rockTableFrame.pack(fill=BOTH, expand=TRUE) 
@@ -817,6 +816,6 @@ quitUserRockFrameButton = Button(userRockTableFrame, text="Quit", command=quitAp
 
 deleteUserUserRockFrameButton = Button(userRockTableFrame, text="Edit Users", command=editUser)
 switchToRockTable = Button(userRockTableFrame, text="View All Rocks", command=showRockFrame)
-
+"""
 
 root.mainloop()
