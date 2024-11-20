@@ -80,33 +80,12 @@ CREATE TABLE likes (
 INSERT INTO images (`imageName`, `imageData`)
 VALUES ('Granite', LOAD_FILE('C:\Users\horne\Documents\GitHub\A-Database-That-Rocks\Granite.jpg'));
 
-INSERT INTO minerals (`mineralName`, `mineralHardness`)
-VALUES 
-('Quartz', 7),
-('Feldspar', 6),
-('Mica', 2),
-('Calcite', 3),
-('Hornblende', 5);
-
-INSERT INTO posts (`postDescription`, `postUserID`, `images`, `rockColor`, `rockID`)
-VALUES 
-('This is rock', 2, 'C:/Users/Terrell/database/A-Database-That-Rocks/Granite.jpg', 'Red', 1),
-('This is rock', 2, 'C:/Users/horne/Pictures/Cyberpunk 2077/photomode_07022024_001749.png', 'Black', 1)
-
-INSERT INTO users (userPassword, fName, mName, lName) VALUES ('p', 'ADMIN', NULL, 'l'), ('0', 'Terrell', 'Michael', 'Heredia'), ('addydaddy', 'ADMIN', NULL, 'ADMIN');
-INSERT INTO likes (userID,postID) VALUES (1,1);
-DELETE from likes WHERE userID =1 AND postID = 1 ;
 
 
 
-SELECT * FROM posts ORDER BY rockColor 
 
-SELECT * FROM posts WHERE postUserID=1 ORDER BY postID ASC
+INSERT INTO users (userPassword, fName, mName, lName) VALUES ('579d9814911e70768fa01ae064b1566f', 'ADMIN', NULL, 'l'), ('0', 'Terrell', 'Michael', 'Heredia'), ('579d9814911e70768fa01ae064b1566f', 'ADMIN', NULL, 'ADMIN');
 
-#SHOW TABLES;
 
-DROP DATABASE rockDB;
 
-DROP TABLE images
 
-DROP TABLE rocks
