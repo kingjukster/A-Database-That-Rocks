@@ -439,6 +439,7 @@ def editUser():
     else:
         messagebox.showerror("Error", "ADMIN ONLY!")
             
+
 #needs edited
 def addRock():
     def submitRock():
@@ -633,6 +634,104 @@ def LikePost(p):
     updatelikes(p)
     cursor.close()
     conn.close()
+    
+    
+def editPostfunc(p):
+    def removePosts(p):
+        try:
+            conn = connectDB()
+            cursor = conn.cursor()
+            cursor.execute("DELETE FROM Likes WHERE postID =  %s ", (p[0],))
+            conn.commit()
+            cursor.execute("DELETE FROM posts WHERE postID = %s ", (p[0],))
+            conn.commit()
+            messagebox.showinfo("Success", "Post removed successfully!")
+        except mysql.connector.Error as err:
+            print(f"Error: {err}")
+            messagebox.showerror("Error", "Failed to Remove.")
+        finally:
+            cursor.close()
+            conn.close()
+    
+    def changePost(p):
+        conn = connectDB()
+        cursor = conn.cursor()
+        try:
+            des = desEntry.get()
+            image = ImageEntry.get() 
+            color = selectedColor.get() 
+            rock = selectedRock.get()
+            #print(rock)
+            cursor.execute("SELECT rockID FROM rocks where rockName = %s",(rock,))
+            #print(rock)
+            rock = cursor.fetchone()  # This will return a tuple like (0,) or (1,)
+            #print(rock)
+            cursor.execute("""
+            UPDATE posts SET postDescription = %s, images = %s, rockColor = %s, rockID = %s
+            WHERE postID = %s
+        """, (des,image,color,rock[0],p[0]))
+            conn.commit()
+            messagebox.showinfo("Success", "Post edited successfully!")
+            editPostWindow.destroy()
+            
+        except mysql.connector.Error as err:
+            print(f"Error: {err}")
+            messagebox.showerror("Error", "Failed to edit Post.")
+        finally:
+            cursor.close()
+            conn.close()
+        
+    editPostWindow = Toplevel()
+    editPostWindow.title(f"Post #{p[0]}")
+    editPostWindow.geometry("400x700")
+    conn = connectDB()
+    cursor = conn.cursor()
+    imagePath = p[3]
+    if imagePath:
+        try:
+            image = Image.open(imagePath)
+            image = image.resize((300, 300))
+            photo = ImageTk.PhotoImage(image)
+            imageLabel = Label(editPostWindow, image=photo)
+            imageLabel.image = photo
+            imageLabel.pack(pady=10)
+        except Exception as e:
+            Label(editPostWindow, text="Error loading image").pack()
+            #print(f"Error loading image: {e}")
+    #User Name
+    cursor.execute("SELECT CONCAT_WS(' ', fName, mName, lName) as fullName FROM users WHERE userID=%s", (p[5],))
+    user = cursor.fetchall()
+    
+    
+    Label(editPostWindow, text="Image:").pack(pady=5)
+    ImageEntry = Entry(editPostWindow)
+    ImageEntry.insert(0, p[3])
+    ImageEntry.pack(pady=5)
+    Label(editPostWindow, text="Description:").pack(pady=5)
+    desEntry = Entry(editPostWindow)
+    desEntry.insert(0, p[1])
+    desEntry.pack()
+    #color
+    colors = ['Black', 'Blue', 'Green', 'Orange', 'Purple', 'Red', 'White', 'Yellow']
+    Label(editPostWindow, text="Rock Color:").pack(pady=5)
+    selectedColor = StringVar(value=p[4])
+    rockColorDropDown = OptionMenu(editPostWindow, selectedColor, *colors)
+    rockColorDropDown.pack()
+    #rock
+    cursor.execute("SELECT rockName FROM rocks")
+    rocks = [row[0] for row in cursor.fetchall()]
+    Label(editPostWindow, text="Rock Name:").pack(pady=5)
+    selectedRock = StringVar(value=rocks[p[5]])
+    rockNameDropDown = OptionMenu(editPostWindow, selectedRock, *rocks)
+    rockNameDropDown.pack()
+    
+    UpdatePost = Button(editPostWindow, text="Update Post", command=lambda: [changePost(p)])
+    UpdatePost.pack()
+    removepostButton = Button(editPostWindow, text="Remove Post", command=lambda: [removePosts(p)])
+    removepostButton.pack()
+    
+    cursor.close()
+    conn.close()
 
 def updatelikes(p):
     conn = connectDB()
@@ -649,7 +748,7 @@ def updatelikes(p):
 def displayImage(currentUserID):
     def detailedView(p):
         detailedWindow = Toplevel()
-        detailedWindow.title(f"NAME THIS")
+        detailedWindow.title(f"Post #{p[0]}")
         detailedWindow.geometry("400x600")
         conn = connectDB()
         cursor = conn.cursor()
@@ -668,8 +767,11 @@ def displayImage(currentUserID):
         #User Name
         cursor.execute("SELECT CONCAT_WS(' ', fName, mName, lName) as fullName FROM users WHERE userID=%s", (p[5],))
         user = cursor.fetchall()
-        user = user[0]
-        userName = user[0]
+        if user == list:
+            user = user[0]
+            userName = user[0]
+        else:
+            userName = "Unknown User"
         userLabel = Label(detailedWindow, text=f"Posted by: {userName}", font=("Arial", 10))
         userLabel.pack(pady=5)
         #Rock Name
@@ -694,6 +796,10 @@ def displayImage(currentUserID):
         LikeLabel.pack(pady=5)
         likeButton = Button(detailedWindow, text="Like", command=lambda: [LikePost(p), refreshLikeLabel()])
         likeButton.pack()
+        if currentUserID == -1 or currentUserID ==  p[2]:
+            editPost = Button(detailedWindow, text="Edit Post", command=lambda: [editPostfunc(p), refreshLikeLabel()])
+            editPost.pack()
+        
         cursor.close()
         conn.close()
     def refresh(event=None, queryNum = 0):
@@ -735,7 +841,7 @@ def displayImage(currentUserID):
                 except Exception as e:
                     Label(postFrame, text="Error loading image", bg="darkgrey").pack()
                     #print(f"Error loading image for post {i + 1}: {e}")
-            viewButton = Button(postFrame, text="View", command=lambda p=post: detailedView(p))
+            viewButton = Button(postFrame, text="View", command=lambda p=post: {refresh,detailedView(p)})
             viewButton.pack()
         
         root.grid_rowconfigure(0, weight=0, minsize=50)
@@ -776,6 +882,8 @@ def displayImage(currentUserID):
         allPostButton.grid_remove()
         userPostButton.grid(row=0, column=3, padx=10, pady=10, sticky="ne")
         refresh()
+    
+    
     userPostButton = Button(toolBarFrame, text="View User Posts", command=toggleAllPosts)
     userPostButton.grid(row=0, column=3, padx=10, pady=10, sticky="ne")
     userPostButton.config(bg='darkgrey')
@@ -788,6 +896,7 @@ def displayImage(currentUserID):
         deleteUser = Button(toolBarFrame, text="Edit Users", command=editUser)
         deleteUser.grid(row=0, column=5, padx=10, pady=10, sticky="ne")
         deleteUser.config(bg='darkgrey')
+        
     toolBarFrame.grid_columnconfigure(0, weight=1)
     toolBarFrame.grid_columnconfigure(1, weight=1)
     toolBarFrame.grid_columnconfigure(2, weight=1)

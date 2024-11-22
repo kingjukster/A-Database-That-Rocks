@@ -16,10 +16,6 @@ python -m pip install mysql-connector-python
 8. likePost()
 
 # In Progress
-1. script to fill database with rocks **almost done**
-2. Put frame creation in their respective functions
-3. add filter options for posts frame
-4. add color schemes
 5. Move all buttons into the display function
 # ToDo
 

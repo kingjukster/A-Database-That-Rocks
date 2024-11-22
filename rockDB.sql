@@ -58,7 +58,6 @@ CREATE TABLE posts(
     images VARCHAR(255),
     rockColor ENUM ('Black', 'Blue', 'Green', 'Orange', 'Purple', 'Red', 'White', 'Yellow'),
     rockID int,
-    likes int,
     FOREIGN KEY (postUserID) REFERENCES users(userID),
     FOREIGN KEY (rockID) REFERENCES rocks(rockID)
 );
