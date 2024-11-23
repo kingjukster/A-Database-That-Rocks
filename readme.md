@@ -1,7 +1,7 @@
 
 Steps to run program
 
-1. Run requirement.txt to get all dependencies.
+1. Run install.sh to get all dependencies.
 2. run the entire SQL script in rockDB.sql to set up tables and data to be used for the GUI made.
 3. Run the python file rockDBGUI.py this is the main GUI file and is used to fill other tables with information from the .csv files as well. 
 4. Once in you can make an account with a password then login with the password. We have the signin as a drop down because there aren't going to be many users in test phase but it can be easily changed into a text field.
